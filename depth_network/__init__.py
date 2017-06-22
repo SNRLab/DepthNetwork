@@ -1,1 +1,3 @@
-__all__ = ["depth_network", "better_io_utils"]
+import numpy as np
+
+np.set_printoptions(precision=3, threshold=100000, suppress=True)
