@@ -1,8 +1,8 @@
-import depth_network.common as common
 import h5py
 import matplotlib.pyplot as plt
 import numpy as np
-import cv2
+
+import depth_network.common as common
 
 
 def main():
@@ -19,21 +19,15 @@ def main():
 
         rgb_image = common.preprocess_rgb(rgb_images[i:i + 1])
         depth_image = common.preprocess_depth(depth_images[i:i + 1])
-        print(rgb_image[0].shape)
-        print(depth_image[0].shape)
 
-        depth_image_cl = depth_image[0][0]
-        rgb_image_cl = np.transpose(rgb_image[0], (1, 2, 0))
-        print(depth_image_cl.shape)
-        print(rgb_image_cl.shape)
-        plt.figure()
-        plt.imshow(rgb_image_cl)
-        plt.figure()
-        plt.imshow(depth_image_cl)
-        plt.figure()
-        output = model.predict(rgb_image)[0][0]
-        # output_cl = np.transpose(output, (1, 2, 0))
-        plt.imshow(output)
+        depth_image_cl = common.postprocess_depth(depth_image)[0][0]
+        rgb_image_cl = np.transpose(common.postprocess_rgb(rgb_image)[0], (1, 2, 0))
+        fig, axes = plt.subplots(1, 3, figsize=(9, 3))
+        fig.set_tight_layout(True)
+        axes.ravel()[0].imshow(rgb_image_cl)
+        axes.ravel()[1].imshow(depth_image_cl)
+        output = model.predict(rgb_image)
+        axes.ravel()[2].imshow(common.postprocess_depth(output)[0][0])
         plt.show()
 
 

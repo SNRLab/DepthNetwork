@@ -1,14 +1,11 @@
 import os.path
 
-import matplotlib.pyplot as plt
-from keras.callbacks import ModelCheckpoint
+from keras.callbacks import ModelCheckpoint, TensorBoard
 from keras.optimizers import Adam
 
 import depth_network.common as common
 from depth_network.better_io_utils import BetterHDF5Matrix
 from depth_network.model import DepthNetwork
-
-smooth = 1.
 
 
 def main():
@@ -24,9 +21,13 @@ def main():
         model.compile(loss='mean_squared_error', optimizer=Adam(lr=0.001), metrics=[common.dice_coef, 'accuracy'])
 
     model_checkpoint = ModelCheckpoint(common.model_file, monitor='val_loss', save_best_only=True)
+    tensorboard_callback = TensorBoard(log_dir=common.log_dir, histogram_freq=0, batch_size=16, write_graph=True,
+                                       write_grads=False, write_images=True, embeddings_freq=0,
+                                       embeddings_layer_names=None, embeddings_metadata=None)
 
-    model.fit(rgb_data, depth_data, batch_size=16, epochs=10, shuffle='batch', validation_split=0.3,
-              callbacks=[model_checkpoint])
+    model.fit(rgb_data, depth_data, batch_size=16, epochs=30, shuffle='batch', validation_split=0.3,
+              callbacks=[model_checkpoint, tensorboard_callback])
+
 
 if __name__ == "__main__":
     main()
