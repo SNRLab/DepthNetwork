@@ -15,7 +15,12 @@ def main():
     depth_images = depth_data['.']['Z']
 
     while True:
-        i = int(input("Image Index: "))
+        try:
+            i = int(input("Image Index: "))
+        except(IndexError, ValueError):
+            continue
+        if i >= len(rgb_images):
+            continue
 
         rgb_image = common.preprocess_rgb(rgb_images[i:i + 1])
         depth_image = common.preprocess_depth(depth_images[i:i + 1])
@@ -25,6 +30,7 @@ def main():
         output = model.predict(rgb_image)
         common.show_images((rgb_image_cl, depth_image_cl, common.postprocess_depth(output)[0][0]))
         plt.show()
+
 
 if __name__ == "__main__":
     main()

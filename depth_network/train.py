@@ -27,7 +27,7 @@ def main():
                                        embeddings_layer_names=None, embeddings_metadata=None)
 
     plt.show(block=False)
-    model.fit_generator(data_generator(), steps_per_epoch=data_generator.steps_per_epoch, epochs=25,
+    model.fit_generator(data_generator(), steps_per_epoch=data_generator.steps_per_epoch, epochs=30,
                         callbacks=[model_checkpoint, tensorboard_callback])
 
 
