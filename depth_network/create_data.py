@@ -11,7 +11,6 @@ def u(string):
 
 def create_virtual_data(file_path, source_files, dataset_name):
     files = list(map(lambda f: h5f.open(u(f), flags=h5f.ACC_RDONLY), source_files))
-    print(files)
     datasets = []
     dataspaces = []
     num_elems = 0
@@ -24,10 +23,6 @@ def create_virtual_data(file_path, source_files, dataset_name):
         dataspaces.append(dataspace)
         num_elems += dataspace.shape[0]
         dims = dataspace.shape[1:]
-
-    print(datasets)
-    print(dataspaces)
-    print(num_elems)
 
     virtual_file = h5f.create(u(file_path))
     virtual_dataspace = h5s.create_simple((num_elems,) + dims)
@@ -51,13 +46,21 @@ def create_virtual_data(file_path, source_files, dataset_name):
         dataset.close()
         file.close()
 
-    f = h5py.File(os.path.join(common.data_dir, 'rgb.hdf5'))
 
 def main():
-    rgb_file_names = glob.glob(os.path.join(common.data_dir, "*_rgb_small*.hdf5"))
-    depth_file_names = glob.glob(os.path.join(common.data_dir, "*_z_small*.hdf5"))
+    rgb_file_names = list(map(lambda n: os.path.join(common.data_dir, n),
+                              ['0_rgb_small.hdf5', '2_rgb_small.hdf5', '3_rgb_small.hdf5', '4_rgb_small.hdf5',
+                               '5_rgb_small.hdf5', '6_rgb_small.hdf5', '7_rgb_small.hdf5', '8_rgb_small.hdf5',
+                               '9_rgb_small.hdf5', '10_rgb_small.hdf5', '11_rgb_small.hdf5', '12_rgb_small.hdf5',
+                               '13_rgb_small.hdf5', '14_rgb_small.hdf5', '15_rgb_small.hdf5', '16_rgb_small.hdf5']))
+    depth_file_names = list(map(lambda n: os.path.join(common.data_dir, n),
+                                ['0_z_small.hdf5', '2_z_small.hdf5', '3_z_small.hdf5', '4_z_small.hdf5',
+                                 '5_z_small.hdf5', '6_z_small.hdf5', '7_z_small.hdf5', '8_z_small.hdf5',
+                                 '9_z_small.hdf5', '10_z_small.hdf5', '11_z_small.hdf5', '12_z_small.hdf5',
+                                 '13_z_small.hdf5', '14_z_small.hdf5', '15_z_small.hdf5', '16_z_small.hdf5']))
     create_virtual_data(os.path.join(common.data_dir, 'rgb.hdf5'), rgb_file_names, 'RGB')
     create_virtual_data(os.path.join(common.data_dir, 'depth.hdf5'), depth_file_names, 'Z')
+
 
 if __name__ == '__main__':
     main()

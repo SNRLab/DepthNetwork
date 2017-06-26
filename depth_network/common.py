@@ -2,6 +2,7 @@ import os.path
 
 import keras.backend
 import keras.models
+import matplotlib.pyplot as plt
 import numpy as np
 import skimage.transform
 
@@ -10,8 +11,8 @@ np.set_printoptions(threshold=np.nan)
 keras.backend.set_image_data_format('channels_first')
 
 data_dir = 'data'
-rgb_data_file = os.path.join(data_dir, '0_rgb_small.hdf5')
-depth_data_file = os.path.join(data_dir, '0_z_small.hdf5')
+rgb_data_file = os.path.join(data_dir, 'rgb.hdf5')
+depth_data_file = os.path.join(data_dir, 'depth.hdf5')
 
 model_file = os.path.join(data_dir, 'model.hdf5')
 
@@ -51,6 +52,10 @@ def preprocess_depth(depth):
     return preprocess_image(depth, 16 - depth.shape[1])
 
 
+def data_normalizer(images, depths):
+    return preprocess_rgb(images), preprocess_depth(depths)
+
+
 def postprocess_rgb(image):
     return image[:, :3, 7:57, 7:57]
 
@@ -58,6 +63,13 @@ def postprocess_rgb(image):
 def postprocess_depth(depth):
     return depth[:, :1, 7:57, 7:57]
 
+
+def show_images(images):
+    fig, axes = plt.subplots(1, len(images), figsize=(3 * len(images), 3))
+    fig.set_tight_layout(True)
+    for ax, img in zip(axes.ravel(), images):
+        ax.imshow(img)
+    # plt.show()
 
 smooth = 1.
 

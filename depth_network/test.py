@@ -22,14 +22,9 @@ def main():
 
         depth_image_cl = common.postprocess_depth(depth_image)[0][0]
         rgb_image_cl = np.transpose(common.postprocess_rgb(rgb_image)[0], (1, 2, 0))
-        fig, axes = plt.subplots(1, 3, figsize=(9, 3))
-        fig.set_tight_layout(True)
-        axes.ravel()[0].imshow(rgb_image_cl)
-        axes.ravel()[1].imshow(depth_image_cl)
         output = model.predict(rgb_image)
-        axes.ravel()[2].imshow(common.postprocess_depth(output)[0][0])
+        common.show_images((rgb_image_cl, depth_image_cl, common.postprocess_depth(output)[0][0]))
         plt.show()
-
 
 if __name__ == "__main__":
     main()
