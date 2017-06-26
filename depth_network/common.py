@@ -2,11 +2,11 @@ import os.path
 
 import keras.backend
 import keras.models
+from keras.optimizers import Adam
 import matplotlib.pyplot as plt
 import numpy as np
 import skimage.transform
-
-np.set_printoptions(threshold=np.nan)
+import depth_network.model as model
 
 keras.backend.set_image_data_format('channels_first')
 
@@ -14,18 +14,31 @@ data_dir = 'data'
 rgb_data_file = os.path.join(data_dir, 'rgb.hdf5')
 depth_data_file = os.path.join(data_dir, 'depth.hdf5')
 
-model_file = os.path.join(data_dir, 'model.hdf5')
+render_model_file = os.path.join(data_dir, 'render_model.hdf5')
+depth_model_file = os.path.join(data_dir, 'depth_model.hdf5')
 
 log_dir = 'logs'
 
 image_size = (64, 64)
 
 
-def load_model():
-    return keras.models.load_model(model_file, custom_objects={'dice_coef': dice_coef})
+def load_models(create=False):
+    return _load_model(render_model_file, create), _load_model(depth_model_file, create)
 
 
-def preprocess_image(images, channel_padding):
+def _load_model(file, create=False):
+    try:
+        return keras.models.load_model(file, custom_objects={'dice_coef': dice_coef})
+    except (OSError, ValueError):
+        if create:
+            m = model.DepthNetwork(input_shape=(3, 64, 64))
+            m.compile(loss='mean_squared_error', optimizer=Adam(lr=0.001), metrics=[dice_coef, 'accuracy'])
+            return m
+        else:
+            return None
+
+
+def preprocess_batch(images, channel_padding):
     new_images = np.empty((images.shape[0], images.shape[1] + channel_padding,) + image_size)
 
     for i, image in enumerate(images):
@@ -41,26 +54,26 @@ def preprocess_image(images, channel_padding):
     return new_images
 
 
-def preprocess_rgb(image):
+def preprocess_rgb_batch(image):
     image /= 255.
-    return preprocess_image(image, 0)
+    return preprocess_batch(image, 0)
 
 
-def preprocess_depth(depth):
+def preprocess_depth_batch(depth):
     depth = depth.astype(np.uint8)
     depth = np.transpose(depth, (0, 1, 3, 2))
-    return preprocess_image(depth, 16 - depth.shape[1])
+    return preprocess_batch(depth, 16 - depth.shape[1])
 
 
 def data_normalizer(images, depths):
-    return preprocess_rgb(images), preprocess_depth(depths)
+    return preprocess_rgb_batch(images), preprocess_depth_batch(depths)
 
 
-def postprocess_rgb(image):
+def postprocess_rgb_batch(image):
     return image[:, :3, 7:57, 7:57]
 
 
-def postprocess_depth(depth):
+def postprocess_depth_batch(depth):
     return depth[:, :1, 7:57, 7:57]
 
 
@@ -69,7 +82,8 @@ def show_images(images):
     fig.set_tight_layout(True)
     for ax, img in zip(axes.ravel(), images):
         ax.imshow(img)
-    # plt.show()
+    plt.show()
+
 
 smooth = 1.
 

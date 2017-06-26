@@ -6,7 +6,7 @@ import depth_network.common as common
 
 
 def main():
-    model = common.load_model()
+    render_model, depth_model = common.load_models()
 
     rgb_data = h5py.File(common.rgb_data_file, 'r')
     depth_data = h5py.File(common.depth_data_file, 'r')
@@ -22,13 +22,13 @@ def main():
         if i >= len(rgb_images):
             continue
 
-        rgb_image = common.preprocess_rgb(rgb_images[i:i + 1])
-        depth_image = common.preprocess_depth(depth_images[i:i + 1])
+        rgb_image = common.preprocess_rgb_batch(rgb_images[i:i + 1])
+        depth_image = common.preprocess_depth_batch(depth_images[i:i + 1])
 
-        depth_image_cl = common.postprocess_depth(depth_image)[0][0]
-        rgb_image_cl = np.transpose(common.postprocess_rgb(rgb_image)[0], (1, 2, 0))
-        output = model.predict(rgb_image)
-        common.show_images((rgb_image_cl, depth_image_cl, common.postprocess_depth(output)[0][0]))
+        depth_image_cl = common.postprocess_depth_batch(depth_image)[0][0]
+        rgb_image_cl = np.transpose(common.postprocess_rgb_batch(rgb_image)[0], (1, 2, 0))
+        output = depth_model.predict(rgb_image)
+        common.show_images((rgb_image_cl, depth_image_cl, common.postprocess_depth_batch(output)[0][0]))
         plt.show()
 
 
