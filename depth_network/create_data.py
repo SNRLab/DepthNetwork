@@ -1,8 +1,9 @@
-import h5py
-from h5py import h5d, h5f, h5s, h5p, h5t
-import depth_network.common as common
+import logging
 import os.path
-import glob
+
+from h5py import h5d, h5f, h5s, h5p, h5t
+
+import depth_network.common as common
 
 
 def u(string):
@@ -10,6 +11,8 @@ def u(string):
 
 
 def create_virtual_data(file_path, source_files, dataset_name):
+    logging.info("Creating virtual dataset file: %s", file_path)
+
     files = list(map(lambda f: h5f.open(u(f), flags=h5f.ACC_RDONLY), source_files))
     datasets = []
     dataspaces = []
@@ -32,7 +35,6 @@ def create_virtual_data(file_path, source_files, dataset_name):
     for file_name, dataset, dataspace in zip(source_files, datasets, dataspaces):
         start = (starting_elem, 0, 0, 0)
         virtual_dataspace.select_hyperslab(start, (1, 1, 1, 1), block=dataspace.shape)
-        print(virtual_dataspace.get_select_bounds())
         dcpl.set_virtual(virtual_dataspace, u(file_name), u(dataset_name), dataspace)
         starting_elem += dataspace.shape[0]
 
@@ -53,12 +55,19 @@ def main():
                                '5_rgb_small.hdf5', '6_rgb_small.hdf5', '7_rgb_small.hdf5', '8_rgb_small.hdf5',
                                '9_rgb_small.hdf5', '10_rgb_small.hdf5', '11_rgb_small.hdf5', '12_rgb_small.hdf5',
                                '13_rgb_small.hdf5', '14_rgb_small.hdf5', '15_rgb_small.hdf5', '16_rgb_small.hdf5']))
+    brdf_file_names = list(map(lambda n: os.path.join(common.data_dir, n),
+                               ['0_brdf_small.hdf5', '2_brdf_small.hdf5', '3_brdf_small.hdf5', '4_brdf_small.hdf5',
+                                '5_brdf_small.hdf5', '6_brdf_small.hdf5', '7_brdf_small.hdf5', '8_brdf_small.hdf5',
+                                '9_brdf_small.hdf5', '10_brdf_small.hdf5', '11_brdf_small.hdf5', '12_brdf_small.hdf5',
+                                '13_brdf_small.hdf5', '14_brdf_small.hdf5', '15_brdf_small.hdf5',
+                                '16_brdf_small.hdf5']))
     depth_file_names = list(map(lambda n: os.path.join(common.data_dir, n),
                                 ['0_z_small.hdf5', '2_z_small.hdf5', '3_z_small.hdf5', '4_z_small.hdf5',
                                  '5_z_small.hdf5', '6_z_small.hdf5', '7_z_small.hdf5', '8_z_small.hdf5',
                                  '9_z_small.hdf5', '10_z_small.hdf5', '11_z_small.hdf5', '12_z_small.hdf5',
                                  '13_z_small.hdf5', '14_z_small.hdf5', '15_z_small.hdf5', '16_z_small.hdf5']))
     create_virtual_data(os.path.join(common.data_dir, 'rgb.hdf5'), rgb_file_names, 'RGB')
+    create_virtual_data(os.path.join(common.data_dir, 'brdf.hdf5'), brdf_file_names, 'BRDF')
     create_virtual_data(os.path.join(common.data_dir, 'depth.hdf5'), depth_file_names, 'Z')
 
 
