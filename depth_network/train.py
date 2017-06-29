@@ -1,5 +1,5 @@
 import h5py
-from keras.callbacks import ModelCheckpoint
+from keras.callbacks import ModelCheckpoint, TensorBoard
 
 import depth_network.common as common
 from depth_network.data_utils import HDFGenerator
@@ -13,10 +13,12 @@ def train_render_network():
 
     render_model = common.load_render_model(create=True)
 
-    model_checkpoint = ModelCheckpoint(common.render_model_file, monitor='loss', save_best_only=True)
+    model_checkpoint = ModelCheckpoint(common.render_model_file, monitor='dice_coef', save_best_only=False,
+                                       save_weights_only=True)
+    tensorboard = TensorBoard(common.log_dir, batch_size=1, write_images=True)
 
     render_model.fit_generator(data_generator(), steps_per_epoch=data_generator.steps_per_epoch, epochs=30,
-                               callbacks=[model_checkpoint])
+                               callbacks=[model_checkpoint, tensorboard])
 
 
 def train_depth_network():
@@ -27,7 +29,7 @@ def train_depth_network():
 
     depth_model = common.load_depth_model(create=True)
 
-    model_checkpoint = ModelCheckpoint(common.depth_model_file, monitor='loss', save_best_only=True)
+    model_checkpoint = ModelCheckpoint(common.depth_model_file, monitor='dice_coef', save_best_only=False)
 
     depth_model.fit_generator(data_generator(), steps_per_epoch=data_generator.steps_per_epoch, epochs=30,
                               callbacks=[model_checkpoint])

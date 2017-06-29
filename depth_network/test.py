@@ -1,21 +1,19 @@
-import sys
+import logging
+import os
 
+import cv2
 import h5py
 import matplotlib.pyplot as plt
 import numpy as np
-import cv2
-import logging
 
 import depth_network.common as common
 
 
 def main():
-    render_model, depth_model = common.load_models()
+    render_model, depth_model = common.load_models(create=True)
     if render_model is None or depth_model is None:
         logging.critical("Could not load render and/or depth models.")
-        sys.exit(1)
-
-    render_model.summary()
+        # sys.exit(1)
 
     rgb_data = h5py.File(common.rgb_data_file, 'r')
     brdf_data = h5py.File(common.brdf_data_file, 'r')
@@ -45,13 +43,14 @@ def main():
         depth_image_true = depth_batch_true_pre[0][0]
 
         brdf_batch_pred_post = common.postprocess_rgb_batch(render_model.predict(rgb_batch_true_pre))
-        brdf_batch_pred_pre = common.preprocess_brdf_input_batch(brdf_batch_pred_post)
-        depth_batch_pred_post = common.postprocess_depth_batch(depth_model.predict(brdf_batch_pred_pre))
+        # brdf_batch_pred_pre = common.preprocess_brdf_input_batch(brdf_batch_pred_post)
+        # depth_batch_pred_post = common.postprocess_depth_batch(depth_model.predict(brdf_batch_pred_pre))
 
         brdf_image_pred = common.normalize_image_range(np.transpose(brdf_batch_pred_post[0], (1, 2, 0)))
+        brdf_image_pred = cv2.cvtColor(brdf_image_pred, cv2.COLOR_BGR2RGB)
         print(brdf_image_pred.shape)
-        depth_image_pred = depth_batch_pred_post[0][0]
-        common.show_images((rgb_image_true, brdf_image_true, depth_image_true, brdf_image_pred, depth_image_pred))
+        # depth_image_pred = depth_batch_pred_post[0][0]
+        common.show_images((rgb_image_true, brdf_image_true, depth_image_true, brdf_image_pred))
         plt.show()
 
 

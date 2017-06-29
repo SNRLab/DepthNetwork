@@ -33,8 +33,9 @@ def DepthNetwork(input_shape=None, data_format=None):
     x = _alpha_transpose(x, 32, "alpha7", data_format=data_format)
     x = UpSampling2D(2, data_format=data_format)(x)
     x = _alpha_transpose(x, 16, "alpha8", data_format=data_format)
+    x = _beta_transpose(x, 1, "beta_output", data_format=data_format)
 
-    return Model(inputs=inputs, outputs=x)
+    return Model(inputs=inputs, outputs=x, name="depth_net")
 
 
 def _alpha(input_tensor, filters, name, data_format=None):
