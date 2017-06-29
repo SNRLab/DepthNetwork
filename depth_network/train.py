@@ -29,7 +29,8 @@ def train_depth_network():
 
     depth_model = common.load_depth_model(create=True)
 
-    model_checkpoint = ModelCheckpoint(common.depth_model_file, monitor='dice_coef', save_best_only=False)
+    model_checkpoint = ModelCheckpoint(common.depth_model_file, monitor='dice_coef', save_best_only=False,
+                                       save_weights_only=True)
 
     depth_model.fit_generator(data_generator(), steps_per_epoch=data_generator.steps_per_epoch, epochs=30,
                               callbacks=[model_checkpoint])
