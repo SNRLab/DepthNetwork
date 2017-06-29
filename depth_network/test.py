@@ -40,17 +40,20 @@ def main():
         brdf_image_true = common.normalize_image_range(
             np.transpose(common.postprocess_rgb_batch(brdf_batch_true_pre)[0], (1, 2, 0))).astype(np.float32)
         brdf_image_true = cv2.cvtColor(brdf_image_true, cv2.COLOR_BGR2RGB)
-        depth_image_true = depth_batch_true_pre[0][0]
+        depth_image_true = common.postprocess_depth_batch(depth_batch_true_pre)[0][0]
 
         brdf_batch_pred_post = common.postprocess_rgb_batch(render_model.predict(rgb_batch_true_pre))
-        # brdf_batch_pred_pre = common.preprocess_brdf_input_batch(brdf_batch_pred_post)
-        # depth_batch_pred_post = common.postprocess_depth_batch(depth_model.predict(brdf_batch_pred_pre))
+        brdf_batch_pred_pre = common.preprocess_brdf_input_batch(brdf_batch_pred_post)
+        depth_batch_pred_post = common.postprocess_depth_batch(depth_model.predict(brdf_batch_pred_pre))
+
+        depth_batch_pred2_post = common.postprocess_depth_batch(depth_model.predict(brdf_batch_true_pre))
 
         brdf_image_pred = common.normalize_image_range(np.transpose(brdf_batch_pred_post[0], (1, 2, 0)))
         brdf_image_pred = cv2.cvtColor(brdf_image_pred, cv2.COLOR_BGR2RGB)
-        print(brdf_image_pred.shape)
-        # depth_image_pred = depth_batch_pred_post[0][0]
-        common.show_images((rgb_image_true, brdf_image_true, depth_image_true, brdf_image_pred))
+        depth_image_pred = depth_batch_pred_post[0][0]
+        depth_image_pred2 = depth_batch_pred2_post[0][0]
+        common.show_images((rgb_image_true, brdf_image_true, depth_image_true, brdf_image_pred, depth_image_pred,
+                            depth_image_pred2))
         plt.show()
 
 
