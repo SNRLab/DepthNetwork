@@ -69,7 +69,7 @@ def _compile_model(m):
     m.compile(loss='mean_squared_error', optimizer=Adam(lr=0.001), metrics=[dice_coef, 'accuracy'])
 
 
-def preprocess_batch(images, channel_padding):
+def preprocess_batch(images):
     new_images = np.empty((images.shape[0], images.shape[1]) + image_size)
 
     for i, image in enumerate(images):
@@ -88,30 +88,22 @@ def preprocess_batch(images, channel_padding):
 
 def preprocess_rgb_batch(images):
     images /= 255.
-    return preprocess_batch(images, 0)
-
-
-def preprocess_brdf_output_batch(brdfs):
-    return preprocess_batch(brdfs, 16 - brdfs.shape[1])
-
-
-def preprocess_brdf_input_batch(brdfs):
-    return preprocess_batch(brdfs, 0)
+    return preprocess_batch(images)
 
 
 def preprocess_depth_batch(depths):
     depths = depths.astype(np.uint8)
     # Rows and columns are switched in HDF files
     depths = np.transpose(depths, (0, 1, 3, 2))
-    return preprocess_batch(depths, 16 - depths.shape[1])
+    return preprocess_batch(depths)
 
 
 def render_data_normalizer(images, brdfs):
-    return preprocess_rgb_batch(images), preprocess_brdf_output_batch(brdfs)
+    return preprocess_rgb_batch(images), preprocess_batch(brdfs)
 
 
 def depth_data_normalizer(brdfs, depths):
-    return preprocess_brdf_input_batch(brdfs), preprocess_depth_batch(depths)
+    return preprocess_batch(brdfs), preprocess_depth_batch(depths)
 
 
 def postprocess_rgb_batch(images):

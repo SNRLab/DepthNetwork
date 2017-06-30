@@ -32,7 +32,7 @@ def main():
             continue
 
         rgb_batch_true_pre = common.preprocess_rgb_batch(rgb_images[i:i + 1])
-        brdf_batch_true_pre = common.preprocess_brdf_output_batch(brdf_images[i:i + 1])
+        brdf_batch_true_pre = common.preprocess_batch(brdf_images[i:i + 1])
         depth_batch_true_pre = common.preprocess_depth_batch(depth_images[i:i + 1])
 
         rgb_image_true = np.transpose(common.postprocess_rgb_batch(rgb_batch_true_pre)[0], (1, 2, 0)).astype(np.float32)
@@ -43,7 +43,7 @@ def main():
         depth_image_true = common.postprocess_depth_batch(depth_batch_true_pre)[0][0]
 
         brdf_batch_pred_post = common.postprocess_rgb_batch(render_model.predict(rgb_batch_true_pre))
-        brdf_batch_pred_pre = common.preprocess_brdf_input_batch(brdf_batch_pred_post)
+        brdf_batch_pred_pre = common.preprocess_batch(brdf_batch_pred_post)
         depth_batch_pred_post = common.postprocess_depth_batch(depth_model.predict(brdf_batch_pred_pre))
 
         depth_batch_pred2_post = common.postprocess_depth_batch(depth_model.predict(brdf_batch_true_pre))
