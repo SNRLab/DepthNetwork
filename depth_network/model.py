@@ -1,8 +1,8 @@
 import keras.backend as K
-from keras.models import Model
-from keras.layers import MaxPooling2D, UpSampling2D, Activation, Input, Reshape
+from keras.layers import MaxPooling2D, UpSampling2D, Activation, Input
 from keras.layers.convolutional import Conv2D, Conv2DTranspose
 from keras.layers.normalization import BatchNormalization
+from keras.models import Model
 
 
 def DepthNetwork(input_shape=None, data_format=None):
@@ -53,8 +53,8 @@ def _alpha_transpose(input_tensor, filters, name, data_format=None):
 
 
 def _beta(input_tensor, filters, name, data_format=None):
-    x = Conv2D(filters=filters, kernel_size=3, padding='same', name=name + "_conv", data_format=data_format) \
-        (input_tensor)
+    x = Conv2D(filters=filters, kernel_size=3, padding='same', name=name + "_conv",
+               data_format=data_format)(input_tensor)
     return _beta_common(x, name, data_format=data_format)
 
 

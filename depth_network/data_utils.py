@@ -1,8 +1,8 @@
-import numpy as np
-import cv2
-import depth_network.common as common
-import random
 import math
+import random
+
+import cv2
+import numpy as np
 
 
 class HDFGenerator:
@@ -16,12 +16,12 @@ class HDFGenerator:
 
         assert len(x_dataset) == len(y_dataset)
 
+        # cv2.namedWindow("Depth", cv2.WINDOW_NORMAL)
+        # cv2.namedWindow("BRDF", cv2.WINDOW_NORMAL)
+
         if shuffle:
             self.shuffle_indices = list(range(int(math.ceil(len(x_dataset) / batch_size))))
             random.shuffle(self.shuffle_indices)
-
-        # cv2.namedWindow("Depth", cv2.WINDOW_NORMAL)
-        # cv2.namedWindow("BRDF", cv2.WINDOW_NORMAL)
 
     def __call__(self):
         while True:

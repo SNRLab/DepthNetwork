@@ -1,5 +1,4 @@
 import logging
-import os
 
 import cv2
 import h5py
