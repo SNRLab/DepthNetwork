@@ -5,7 +5,7 @@ from keras.layers.normalization import BatchNormalization
 from keras.models import Model
 
 
-def DepthNetwork(input_shape=None, data_format=None):
+def DepthNetwork(input_shape=None, output_channels=1, data_format=None):
     if data_format is None:
         data_format = K.image_data_format()
 
@@ -33,7 +33,9 @@ def DepthNetwork(input_shape=None, data_format=None):
     x = _alpha_transpose(x, 32, "alpha7", data_format=data_format)
     x = UpSampling2D(2, data_format=data_format)(x)
     x = _alpha_transpose(x, 16, "alpha8", data_format=data_format)
-    x = _beta_transpose(x, 1, "beta_output", data_format=data_format)
+    x = Conv2DTranspose(filters=output_channels, kernel_size=3, padding='same', name='output_conv',
+                        data_format=data_format)(x)
+    x = Activation('relu')(x)
 
     return Model(inputs=inputs, outputs=x, name="depth_net")
 

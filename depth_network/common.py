@@ -1,15 +1,14 @@
+import logging
 import os.path
 
-from keras.models import Model
-from keras.layers import Input, Reshape
 import keras.backend
 import keras.models
-from keras.optimizers import Adam
 import matplotlib.pyplot as plt
 import numpy as np
 import skimage.transform
+from keras.optimizers import Adam
+
 import depth_network.model as model
-import logging
 
 keras.backend.set_image_data_format('channels_first')
 
@@ -19,7 +18,10 @@ brdf_data_file = os.path.join(data_dir, 'brdf.hdf5')
 depth_data_file = os.path.join(data_dir, 'depth.hdf5')
 
 render_model_file = os.path.join(data_dir, 'render_model.hdf5')
+render_model_checkpoint_file = os.path.join(data_dir, 'render_model_{loss:.5f}.hdf5')
 depth_model_file = os.path.join(data_dir, 'depth_model.hdf5')
+depth_model_checkpoint_file = os.path.join(data_dir, 'depth_model_{loss:.5f}.hdf5')
+
 
 log_dir = 'logs'
 
@@ -31,31 +33,16 @@ def load_models(create=False):
 
 
 def load_render_model(create=False):
-    input_shape = (3,) + image_size
-    new_shape = (1, 3 * image_size[0], image_size[1])
-    inputs = Input((3,) + image_size)
-    # Flatten RGB channels to lay side by side
-    x = Reshape(new_shape)(inputs)
-    m = _load_model(render_model_file, new_shape, create)
-    if m is None:
-        return None
-    x = Reshape(input_shape)(m(x))
-    wrapper = Model(inputs=inputs, outputs=x)
-    # Ugly hack to make checkpointing of the wrapper work
-    # Normally, calling save_weights() only causes the wrapper's weights to be saved. Since the wrapper doesn't have any
-    # weights, we can just pass the call on to the wrapped model
-    wrapper.save_weights = lambda filepath, overwrite: m.save_weights(filepath, overwrite)
-    _compile_model(wrapper)
-    return wrapper
+    return _load_model(render_model_file, output_channels=3, loss='mean_absolute_error', create=create)
 
 
 def load_depth_model(create=False):
-    return _load_model(depth_model_file, create=create)
+    return _load_model(depth_model_file, output_channels=1, create=create)
 
 
-def _load_model(file, input_shape=None, create=False):
-    m = model.DepthNetwork(input_shape=input_shape)
-    _compile_model(m)
+def _load_model(file, input_shape=None, output_channels=1, loss='mean_squared_error', create=False):
+    m = model.DepthNetwork(input_shape=input_shape, output_channels=output_channels)
+    _compile_model(m, loss=loss)
     try:
         m.load_weights(file)
     except (OSError, ValueError) as e:
@@ -65,8 +52,8 @@ def _load_model(file, input_shape=None, create=False):
     return m
 
 
-def _compile_model(m):
-    m.compile(loss='mean_squared_error', optimizer=Adam(lr=0.001), metrics=[dice_coef, 'accuracy'])
+def _compile_model(m, loss='mean_squared_error'):
+    m.compile(loss=loss, optimizer=Adam(lr=0.001), metrics=[dice_coef, 'accuracy'])
 
 
 def preprocess_batch(images):
@@ -98,15 +85,24 @@ def preprocess_depth_batch(depths):
     return preprocess_batch(depths)
 
 
+def preprocess_brdf_batch(brdfs):
+    # Magic number to scale data into appropriate range
+    brdfs /= 5000
+    np.clip(brdfs, 0, 1, brdfs)
+    return preprocess_batch(brdfs)
+
+
 def render_data_normalizer(images, brdfs):
-    return preprocess_rgb_batch(images), preprocess_batch(brdfs)
+    images, brdfs = preprocess_rgb_batch(images), preprocess_brdf_batch(brdfs)
+    return images, brdfs
 
 
 def depth_data_normalizer(brdfs, depths):
-    return preprocess_batch(brdfs), preprocess_depth_batch(depths)
+    return preprocess_brdf_batch(brdfs), preprocess_depth_batch(depths)
 
 
 def postprocess_rgb_batch(images):
+    images = np.clip(images, 0, 1)
     return images[:, :3, 7:57, 7:57]
 
 

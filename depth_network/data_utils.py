@@ -16,7 +16,7 @@ class HDFGenerator:
 
         assert len(x_dataset) == len(y_dataset)
 
-        # cv2.namedWindow("Depth", cv2.WINDOW_NORMAL)
+        # cv2.namedWindow("RGB", cv2.WINDOW_NORMAL)
         # cv2.namedWindow("BRDF", cv2.WINDOW_NORMAL)
 
         if shuffle:
@@ -51,20 +51,20 @@ class HDFGenerator:
                 if self.shuffle:
                     random.shuffle(self.shuffle_indices)
 
-            if self.normalizer is not None:
-                x_batch, y_batch = self.normalizer(x_batch, y_batch)
-
             if self.shuffle:
                 p = np.random.permutation(self.batch_size)
                 x_batch = x_batch[p]
                 y_batch = y_batch[p]
 
+            if self.normalizer is not None:
+                x_batch, y_batch = self.normalizer(x_batch, y_batch)
+
             assert len(x_batch) == len(y_batch) == self.batch_size
 
-            # cv2.imshow("BRDF", common.normalize_image_range(np.transpose(x_batch[10][:3], (1, 2, 0))))
-            # cv2.imshow("Depth", cv2.applyColorMap(np.transpose(y_batch[10][:1], (1, 2, 0)).astype(np.uint8),
-            #                                       cv2.COLORMAP_JET))
-            cv2.waitKey(20)
+            # for image, brdf in zip(x_batch, y_batch):
+            #     cv2.imshow("RGB", np.transpose(image, (1, 2, 0)))
+            #     cv2.imshow("BRDF", np.transpose(brdf, (1, 2, 0)))
+            #     cv2.waitKey()
             yield x_batch, y_batch
 
     @property
