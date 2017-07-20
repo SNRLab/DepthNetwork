@@ -18,9 +18,9 @@ brdf_data_file = os.path.join(data_dir, 'brdf.hdf5')
 depth_data_file = os.path.join(data_dir, 'depth.hdf5')
 
 render_model_file = os.path.join(data_dir, 'render_model.hdf5')
-render_model_checkpoint_file = os.path.join(data_dir, 'render_model_{loss:.5f}.hdf5')
+render_model_checkpoint_file = os.path.join(data_dir, 'render_model_{epoch:02d}_{loss:.5f}.hdf5')
 depth_model_file = os.path.join(data_dir, 'depth_model.hdf5')
-depth_model_checkpoint_file = os.path.join(data_dir, 'depth_model_{loss:.5f}.hdf5')
+depth_model_checkpoint_file = os.path.join(data_dir, 'depth_model_{epoch:02d}_{loss:.5f}.hdf5')
 
 
 log_dir = 'logs'
@@ -79,9 +79,11 @@ def preprocess_rgb_batch(images):
 
 
 def preprocess_depth_batch(depths):
-    depths = depths.astype(np.uint8)
     # Rows and columns are switched in HDF files
     depths = np.transpose(depths, (0, 1, 3, 2))
+    # Scale data between 0 and 1
+    depths /= 150
+    np.clip(depths, 0, 1, depths)
     return preprocess_batch(depths)
 
 

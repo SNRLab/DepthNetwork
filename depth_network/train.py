@@ -20,6 +20,8 @@ def train_render_network():
     render_model.fit_generator(data_generator(), steps_per_epoch=data_generator.steps_per_epoch, epochs=30,
                                callbacks=[model_checkpoint, tensorboard])
 
+    render_model.save_weights(common.render_model_file)
+
 
 def train_depth_network():
     brdf_data = h5py.File(common.brdf_data_file, 'r')
@@ -34,3 +36,5 @@ def train_depth_network():
 
     depth_model.fit_generator(data_generator(), steps_per_epoch=data_generator.steps_per_epoch, epochs=30,
                               callbacks=[model_checkpoint])
+
+    depth_model.save_weights(common.depth_model_file)
