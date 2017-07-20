@@ -19,12 +19,11 @@ def train_render_network():
 
     model_checkpoint = ModelCheckpoint(common.render_model_checkpoint_file, monitor='dice_coef', save_best_only=False,
                                        save_weights_only=True)
-    tensorboard = TensorBoard(common.log_dir, batch_size=1, write_images=True)
 
     render_model.fit_generator(train_data_generator(), steps_per_epoch=train_data_generator.steps_per_epoch,
                                validation_data=validation_data_generator,
                                validation_steps=validation_data_generator.steps_per_epoch, epochs=30,
-                               callbacks=[model_checkpoint, tensorboard])
+                               callbacks=[model_checkpoint])
 
     render_model.save_weights(common.render_model_file)
 
