@@ -14,13 +14,19 @@ keras.backend.set_image_data_format('channels_first')
 
 data_dir = 'data'
 rgb_data_file = os.path.join(data_dir, 'rgb.hdf5')
+rgb_train_data_file = os.path.join(data_dir, 'rgb_train.hdf5')
+rgb_validation_data_file = os.path.join(data_dir, 'rgb_validation.hdf5')
 brdf_data_file = os.path.join(data_dir, 'brdf.hdf5')
+brdf_train_data_file = os.path.join(data_dir, 'brdf_train.hdf5')
+brdf_validation_data_file = os.path.join(data_dir, 'brdf_validation.hdf5')
 depth_data_file = os.path.join(data_dir, 'depth.hdf5')
+depth_train_data_file = os.path.join(data_dir, 'depth_train.hdf5')
+depth_validation_data_file = os.path.join(data_dir, 'depth_validation.hdf5')
 
 render_model_file = os.path.join(data_dir, 'render_model.hdf5')
-render_model_checkpoint_file = os.path.join(data_dir, 'render_model_{epoch:02d}_{loss:.5f}.hdf5')
+render_model_checkpoint_file = os.path.join(data_dir, 'render_model_{epoch:02d}_{val_loss:.5f}.hdf5')
 depth_model_file = os.path.join(data_dir, 'depth_model.hdf5')
-depth_model_checkpoint_file = os.path.join(data_dir, 'depth_model_{epoch:02d}_{loss:.5f}.hdf5')
+depth_model_checkpoint_file = os.path.join(data_dir, 'depth_model_{epoch:02d}_{val_loss:.5f}.hdf5')
 
 
 log_dir = 'logs'
