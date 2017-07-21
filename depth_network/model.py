@@ -5,7 +5,7 @@ from keras.layers.normalization import BatchNormalization
 from keras.models import Model
 
 
-def DepthNetwork(input_shape=None, output_channels=1, data_format=None):
+def DepthNetwork(input_shape=None, output_channels=1, data_format=None, name='depth_net'):
     if data_format is None:
         data_format = K.image_data_format()
 
@@ -37,7 +37,7 @@ def DepthNetwork(input_shape=None, output_channels=1, data_format=None):
                         data_format=data_format)(x)
     x = Activation('relu')(x)
 
-    return Model(inputs=inputs, outputs=x, name="depth_net")
+    return Model(inputs=inputs, outputs=x, name=name)
 
 
 def _alpha(input_tensor, filters, name, data_format=None):

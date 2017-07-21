@@ -1,5 +1,6 @@
 import logging
 import os.path
+import sys
 
 import keras.backend
 import keras.models
@@ -9,6 +10,13 @@ import skimage.transform
 from keras.optimizers import Adam
 
 import depth_network.model as model
+
+
+def handle_exception(exc_type, exc_value, exc_traceback):
+    logging.critical("Uncaught exception", exc_info=(exc_type, exc_value, exc_traceback))
+
+
+sys.excepthook = handle_exception
 
 keras.backend.set_image_data_format('channels_first')
 
@@ -30,7 +38,6 @@ render_model_checkpoint_file = os.path.join(data_dir, 'render_model_{epoch:02d}_
 depth_model_file = os.path.join(data_dir, 'depth_model.hdf5')
 depth_model_checkpoint_file = os.path.join(data_dir, 'depth_model_{epoch:02d}_{val_loss:.5f}.hdf5')
 
-
 log_dir = 'logs'
 
 image_size = (64, 64)
@@ -41,16 +48,17 @@ def load_models(create=False):
 
 
 def load_render_model(create=False):
-    return _load_model(render_model_file, output_channels=3, loss='mean_absolute_error', create=create)
+    return _load_model(render_model_file, output_channels=3, loss='mean_absolute_error', name='render_net',
+                       create=create)
 
 
 def load_depth_model(create=False):
-    return _load_model(depth_model_file, output_channels=1, create=create)
+    return _load_model(depth_model_file, output_channels=1, name='depth_net', create=create)
 
 
-def _load_model(file, input_shape=None, output_channels=1, loss='mean_squared_error', create=False):
+def _load_model(file, input_shape=None, output_channels=1, loss='mean_squared_error', name='depth_net', create=False):
     _logger.info("Loading model...")
-    m = model.DepthNetwork(input_shape=input_shape, output_channels=output_channels)
+    m = model.DepthNetwork(input_shape=input_shape, output_channels=output_channels, name=name)
     _compile_model(m, loss=loss)
     try:
         _logger.info("Loading model weights from %s...", file)
