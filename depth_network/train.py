@@ -21,6 +21,13 @@ class LoggerCallback(Callback):
         self._steps = 0
         self._batch_print_mod = 1
 
+    def _format_metrics(self, logs):
+        metric_str = ""
+        for k in self.params['metrics']:
+            if k in logs:
+                metric_str += ", {}: {:0.5f}".format(k, logs[k])
+        return metric_str
+
     def set_params(self, params):
         super(LoggerCallback, self).set_params(params)
         self._epochs = params['epochs']
@@ -39,14 +46,10 @@ class LoggerCallback(Callback):
 
     def on_batch_end(self, batch, logs=None):
         if batch % self._batch_print_mod == 0:
-            metric_str = ""
-            for k in self.params['metrics']:
-                if k in logs:
-                    metric_str += ", {}: {:0.5f}".format(k, logs[k])
-            self._logger.info("│├─Batch %d/%d%s", batch + 1, self._steps, metric_str)
+            self._logger.info("│├─Batch %d/%d%s", batch + 1, self._steps, self._format_metrics(logs))
 
     def on_epoch_end(self, epoch, logs=None):
-        self._logger.info("│└Finished epoch %d/%d", epoch + 1, self._epochs)
+        self._logger.info("│└Finished epoch %d/%d%s", epoch + 1, self._epochs, self._format_metrics(logs))
 
     def on_train_end(self, logs=None):
         self._logger.info("└Finished training")
