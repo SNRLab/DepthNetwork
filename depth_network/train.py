@@ -21,7 +21,7 @@ def train_render_network():
                                        save_weights_only=True)
 
     render_model.fit_generator(train_data_generator(), steps_per_epoch=train_data_generator.steps_per_epoch,
-                               validation_data=validation_data_generator,
+                               validation_data=validation_data_generator(),
                                validation_steps=validation_data_generator.steps_per_epoch, epochs=30,
                                callbacks=[model_checkpoint])
 
