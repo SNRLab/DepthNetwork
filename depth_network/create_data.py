@@ -5,7 +5,7 @@ from h5py import h5d, h5f, h5s, h5p, h5t
 
 import depth_network.common as common
 
-logger = logging.getLogger(__name__)
+_logger = logging.getLogger(__name__)
 
 
 def _u(string):
@@ -13,7 +13,7 @@ def _u(string):
 
 
 def merge_data_files(file_path, source_files, dataset_name):
-    logger.info("Creating virtual dataset file: %s", file_path)
+    _logger.info("Creating virtual dataset file: %s", file_path)
 
     files = list(map(lambda f: h5f.open(_u(f), flags=h5f.ACC_RDONLY), source_files))
     datasets = []
@@ -59,7 +59,7 @@ def fold_data(file_path, train_file_path, validation_file_path, dataset_name, va
     num_validation = min(dataspace.shape[0] - (validation_fold * fold_size), fold_size)
     num_train_before = fold_size * validation_fold
     num_train_after = dataspace.shape[0] - num_validation - num_train_before
-    logger.info("Folding dataset %s: | train: %d | val: %d | train: %d |", file_path, num_train_before, num_validation,
+    _logger.info("Folding dataset %s: | train: %d | val: %d | train: %d |", file_path, num_train_before, num_validation,
                 num_train_after)
     assert num_validation + num_train_after + num_train_before == dataspace.shape[0]
     assert num_validation > 0

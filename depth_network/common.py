@@ -12,6 +12,8 @@ import depth_network.model as model
 
 keras.backend.set_image_data_format('channels_first')
 
+_logger = logging.getLogger(__name__)
+
 data_dir = 'data'
 rgb_data_file = os.path.join(data_dir, 'rgb.hdf5')
 rgb_train_data_file = os.path.join(data_dir, 'rgb_train.hdf5')
@@ -47,18 +49,21 @@ def load_depth_model(create=False):
 
 
 def _load_model(file, input_shape=None, output_channels=1, loss='mean_squared_error', create=False):
+    _logger.info("Loading model...")
     m = model.DepthNetwork(input_shape=input_shape, output_channels=output_channels)
     _compile_model(m, loss=loss)
     try:
+        _logger.info("Loading model weights from %s...", file)
         m.load_weights(file)
     except (OSError, ValueError) as e:
-        logging.warning("Could not load network from %s: %s", file, e)
+        _logger.warning("Could not load model weights from %s: %s", file, e)
         if not create:
             return None
     return m
 
 
 def _compile_model(m, loss='mean_squared_error'):
+    _logger.info("Compiling model...")
     m.compile(loss=loss, optimizer=Adam(lr=0.001), metrics=[dice_coef, 'accuracy'])
 
 

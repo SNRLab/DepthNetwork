@@ -3,6 +3,9 @@ from keras.callbacks import ModelCheckpoint, TensorBoard
 
 import depth_network.common as common
 from depth_network.data_utils import HDFGenerator
+import logging
+
+_logger = logging.getLogger(__name__)
 
 
 def train_render_network():

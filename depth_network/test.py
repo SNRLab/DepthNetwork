@@ -6,6 +6,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 import depth_network.common as common
+import sys
+import logging
+
+_logger = logging.getLogger(__name__)
 
 
 def main():
@@ -31,7 +35,6 @@ def main():
             continue
 
         rgb_batch_true_pre = common.preprocess_rgb_batch(rgb_images[i:i + 1])
-        print("Max: {}".format(np.max(brdf_images[i:i + 1])))
         brdf_batch_true_pre = common.preprocess_brdf_batch(brdf_images[i:i + 1])
         depth_batch_true_pre = common.preprocess_depth_batch(depth_images[i:i + 1])
 
@@ -50,11 +53,8 @@ def main():
 
         brdf_image_pred = np.transpose(brdf_batch_pred_post[0], (1, 2, 0))
         brdf_image_pred = cv2.cvtColor(brdf_image_pred, cv2.COLOR_BGR2RGB)
-        print(brdf_image_pred.dtype)
-        print('type: {}, max: {}, min: {}'.format(brdf_image_pred.dtype, np.max(brdf_image_pred),
-                                                  np.min(brdf_image_pred)))
         brdf_diff = np.abs(brdf_image_true - brdf_image_pred)
-        print('mse: {}, mae: {}'.format((brdf_diff ** 2).mean(), brdf_diff.mean()))
+        _logger.info('index: %s, mse: %s, mae: %s', i, (brdf_diff ** 2).mean(), brdf_diff.mean())
 
         depth_image_pred = depth_batch_pred_post[0][0]
         depth_image_pred2 = depth_batch_pred2_post[0][0]
