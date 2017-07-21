@@ -8,20 +8,20 @@ import depth_network.common as common
 logger = logging.getLogger(__name__)
 
 
-def u(string):
+def _u(string):
     return bytes(string, 'UTF-8')
 
 
-def create_virtual_data(file_path, source_files, dataset_name):
+def merge_data_files(file_path, source_files, dataset_name):
     logger.info("Creating virtual dataset file: %s", file_path)
 
-    files = list(map(lambda f: h5f.open(u(f), flags=h5f.ACC_RDONLY), source_files))
+    files = list(map(lambda f: h5f.open(_u(f), flags=h5f.ACC_RDONLY), source_files))
     datasets = []
     dataspaces = []
     num_elems = 0
 
     for f in files:
-        dataset = h5d.open(f, u(dataset_name))
+        dataset = h5d.open(f, _u(dataset_name))
         datasets.append(dataset)
         dataspace = dataset.get_space()
         dataspace.select_all()
@@ -29,7 +29,7 @@ def create_virtual_data(file_path, source_files, dataset_name):
         num_elems += dataspace.shape[0]
         dims = dataspace.shape[1:]
 
-    virtual_file = h5f.create(u(file_path))
+    virtual_file = h5f.create(_u(file_path))
     virtual_dataspace = h5s.create_simple((num_elems,) + dims)
 
     dcpl = h5p.create(h5p.DATASET_CREATE)
@@ -37,10 +37,10 @@ def create_virtual_data(file_path, source_files, dataset_name):
     for file_name, dataset, dataspace in zip(source_files, datasets, dataspaces):
         start = (starting_elem, 0, 0, 0)
         virtual_dataspace.select_hyperslab(start, (1, 1, 1, 1), block=dataspace.shape)
-        dcpl.set_virtual(virtual_dataspace, u(file_name), u(dataset_name), dataspace)
+        dcpl.set_virtual(virtual_dataspace, _u(file_name), _u(dataset_name), dataspace)
         starting_elem += dataspace.shape[0]
 
-    h5d.create(virtual_file, u(dataset_name), h5t.NATIVE_FLOAT, virtual_dataspace, dcpl=dcpl).close()
+    h5d.create(virtual_file, _u(dataset_name), h5t.NATIVE_FLOAT, virtual_dataspace, dcpl=dcpl).close()
 
     virtual_dataspace.close()
     virtual_file.close()
@@ -51,32 +51,50 @@ def create_virtual_data(file_path, source_files, dataset_name):
         file.close()
 
 
-def partition_data(file_path, train_file_path, validation_file_path, dataset_name, validation_split=0.2):
-    file = h5f.open(u(file_path))
-    dataset = h5d.open(file, u(dataset_name))
+def fold_data(file_path, train_file_path, validation_file_path, dataset_name, validation_fold=0, folds=5):
+    file = h5f.open(_u(file_path))
+    dataset = h5d.open(file, _u(dataset_name))
     dataspace = dataset.get_space()
-    num_validation = int(dataspace.shape[0] * validation_split)
-    num_train = dataspace.shape[0] - num_validation
-    logger.info("Partitioning %s with %d training elements and %d validation elements", file_path, num_train,
-                num_validation)
+    fold_size = round(dataspace.shape[0] / folds)
+    num_validation = min(dataspace.shape[0] - (validation_fold * fold_size), fold_size)
+    num_train_before = fold_size * validation_fold
+    num_train_after = dataspace.shape[0] - num_validation - num_train_before
+    logger.info("Folding dataset %s: | train: %d | val: %d | train: %d |", file_path, num_train_before, num_validation,
+                num_train_after)
+    assert num_validation + num_train_after + num_train_before == dataspace.shape[0]
+    assert num_validation > 0
+    assert (num_train_before >= 0 and num_train_after > 0) or (num_train_before > 0 and num_train_after >= 0)
 
-    dcpl = h5p.create(h5p.DATASET_CREATE)
+    # Create train file
+    train_file = h5f.create(_u(train_file_path))
+    train_dataspace = h5s.create_simple((num_train_before + num_train_after,) + dataspace.shape[1:])
+    train_before_dataspace_shape = (num_train_before,) + dataspace.shape[1:]
+    train_after_dataspace_shape = (num_train_after,) + dataspace.shape[1:]
+    # Select beginning and end of dataset
+    dataspace.select_hyperslab((0, 0, 0, 0), (1, 1, 1, 1), block=train_before_dataspace_shape)
+    dataspace.select_hyperslab((num_train_before + num_validation, 0, 0, 0), (1, 1, 1, 1),
+                               block=train_after_dataspace_shape, op=h5s.SELECT_OR)
+    train_dataspace.select_hyperslab((0, 0, 0, 0), (1, 1, 1, 1),
+                                     block=(num_train_before + num_train_after,) + dataspace.shape[1:])
 
-    train_dataspace_shape = (num_train,) + dataspace.shape[1:]
-    dataspace.select_hyperslab((0, 0, 0, 0), (1, 1, 1, 1), block=train_dataspace_shape)
-    train_file = h5f.create(u(train_file_path))
-    train_dataspace = h5s.create_simple(train_dataspace_shape)
-    dcpl.set_virtual(train_dataspace, u(file_path), u(dataset_name), dataspace)
-    h5d.create(train_file, u(dataset_name), h5t.NATIVE_FLOAT, train_dataspace, dcpl=dcpl).close()
+    train_dcpl = h5p.create(h5p.DATASET_CREATE)
+    train_dcpl.set_virtual(train_dataspace, _u(file_path), _u(dataset_name), dataspace)
+    h5d.create(train_file, _u(dataset_name), h5t.NATIVE_FLOAT, train_dataspace, dcpl=train_dcpl).close()
+
     train_dataspace.close()
     train_file.close()
 
+    # Create validation file
+    validation_file = h5f.create(_u(validation_file_path))
     validation_dataspace_shape = (num_validation,) + dataspace.shape[1:]
-    dataspace.select_hyperslab((num_train, 0, 0, 0), (1, 1, 1, 1), block=validation_dataspace_shape)
-    validation_file = h5f.create(u(validation_file_path))
     validation_dataspace = h5s.create_simple(validation_dataspace_shape)
-    dcpl.set_virtual(validation_dataspace, u(file_path), u(dataset_name), dataspace)
-    h5d.create(validation_file, u(dataset_name), h5t.NATIVE_FLOAT, validation_dataspace, dcpl=dcpl).close()
+
+    dataspace.select_hyperslab((num_train_before, 0, 0, 0), (1, 1, 1, 1), block=validation_dataspace_shape)
+
+    validation_dcpl = h5p.create(h5p.DATASET_CREATE)
+    validation_dcpl.set_virtual(validation_dataspace, _u(file_path), _u(dataset_name), dataspace)
+    h5d.create(validation_file, _u(dataset_name), h5t.NATIVE_FLOAT, validation_dataspace, dcpl=validation_dcpl).close()
+
     validation_dataspace.close()
     validation_file.close()
 
@@ -101,14 +119,14 @@ def main():
                                  '5_z_small.hdf5', '6_z_small.hdf5', '7_z_small.hdf5', '8_z_small.hdf5',
                                  '9_z_small.hdf5', '10_z_small.hdf5', '11_z_small.hdf5', '12_z_small.hdf5',
                                  '13_z_small.hdf5', '14_z_small.hdf5', '15_z_small.hdf5', '16_z_small.hdf5']))
-    create_virtual_data(common.rgb_data_file, rgb_file_names, 'RGB')
-    partition_data(common.rgb_data_file, common.rgb_train_data_file, common.rgb_validation_data_file, 'RGB')
+    merge_data_files(common.rgb_data_file, rgb_file_names, 'RGB')
+    fold_data(common.rgb_data_file, common.rgb_train_data_file, common.rgb_validation_data_file, 'RGB')
 
-    create_virtual_data(os.path.join(common.data_dir, 'brdf.hdf5'), brdf_file_names, 'BRDF')
-    partition_data(common.brdf_data_file, common.brdf_train_data_file, common.brdf_validation_data_file, 'BRDF')
+    merge_data_files(os.path.join(common.data_dir, 'brdf.hdf5'), brdf_file_names, 'BRDF')
+    fold_data(common.brdf_data_file, common.brdf_train_data_file, common.brdf_validation_data_file, 'BRDF')
 
-    create_virtual_data(os.path.join(common.data_dir, 'depth.hdf5'), depth_file_names, 'Z')
-    partition_data(common.depth_data_file, common.depth_train_data_file, common.depth_validation_data_file, 'Z')
+    merge_data_files(os.path.join(common.data_dir, 'depth.hdf5'), depth_file_names, 'Z')
+    fold_data(common.depth_data_file, common.depth_train_data_file, common.depth_validation_data_file, 'Z')
 
 
 if __name__ == '__main__':
