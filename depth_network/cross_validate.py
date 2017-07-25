@@ -53,10 +53,10 @@ def main():
                                    os.path.join(fold_output_dir, 'render_model_{epoch:02d}.hdf5'),
                                    os.path.join(fold_output_dir, 'render_model.hdf5'))
 
-        train.train_render_network(brdf_train_data_file, depth_train_data_file, brdf_validation_data_file,
-                                   depth_validation_data_file,
-                                   os.path.join(fold_output_dir, 'depth_model_{epoch:02d}.hdf5'),
-                                   os.path.join(fold_output_dir, 'depth_model.hdf5'))
+        train.train_depth_network(brdf_train_data_file, depth_train_data_file, brdf_validation_data_file,
+                                  depth_validation_data_file,
+                                  os.path.join(fold_output_dir, 'depth_model_{epoch:02d}.hdf5'),
+                                  os.path.join(fold_output_dir, 'depth_model.hdf5'))
 
 
 if __name__ == '__main__':
