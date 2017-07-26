@@ -45,13 +45,12 @@ def load_models(create=False):
     return load_render_model(create), load_depth_model(create)
 
 
-def load_render_model(create=False):
-    return _load_model(render_model_file, output_channels=3, loss='mean_absolute_error', name='render_net',
-                       create=create)
+def load_render_model(file, create=False):
+    return _load_model(file, output_channels=3, loss='mean_absolute_error', name='render_net', create=create)
 
 
-def load_depth_model(create=False):
-    return _load_model(depth_model_file, output_channels=1, name='depth_net', create=create)
+def load_depth_model(file, create=False):
+    return _load_model(file, output_channels=1, name='depth_net', create=create)
 
 
 def _load_model(file, input_shape=None, output_channels=1, loss='mean_squared_error', name='depth_net', create=False):
