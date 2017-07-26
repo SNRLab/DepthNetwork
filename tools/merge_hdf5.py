@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 
 import argparse
+import logging
 
 import depth_network.data_utils as data_utils
+
+logging.basicConfig(level=logging.INFO)
 
 
 def main():

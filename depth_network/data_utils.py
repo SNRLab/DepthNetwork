@@ -1,13 +1,11 @@
+import OpenEXR
 import logging
 import math
 import random
 
+import Imath
 import numpy as np
 from h5py import h5d, h5f, h5s, h5p, h5t
-import OpenEXR
-import Imath
-
-_logger = logging.getLogger(__name__)
 
 
 def _u(string):
@@ -110,7 +108,8 @@ def merge_data_files(file_path, source_files, dataset_name):
     :param source_files: list of source files
     :param dataset_name: name of the dataset to merge
     """
-    _logger.info("Creating virtual dataset file: %s", file_path)
+    logger = logging.getLogger(__name__)
+    logger.info("Creating virtual dataset file: %s", file_path)
 
     files = list(map(lambda f: h5f.open(_u(f), flags=h5f.ACC_RDONLY), source_files))
     datasets = []
@@ -162,6 +161,8 @@ def fold_data(file_path, train_file_path, validation_file_path, dataset_name, va
     :param validation_fold: where to fold the data, 0<=validation_fold<folds
     :param folds: number of folds
     """
+    logger = logging.getLogger(__name__)
+
     file = h5f.open(_u(file_path))
     dataset = h5d.open(file, _u(dataset_name))
     dataspace = dataset.get_space()
@@ -169,7 +170,7 @@ def fold_data(file_path, train_file_path, validation_file_path, dataset_name, va
     num_validation = min(dataspace.shape[0] - (validation_fold * fold_size), fold_size)
     num_train_before = fold_size * validation_fold
     num_train_after = dataspace.shape[0] - num_validation - num_train_before
-    _logger.info("Folding dataset %s: | train: %d | val: %d | train: %d |", file_path, num_train_before, num_validation,
+    logger.info("Folding dataset %s: | train: %d | val: %d | train: %d |", file_path, num_train_before, num_validation,
                  num_train_after)
     assert num_validation + num_train_after + num_train_before == dataspace.shape[0]
     assert num_validation > 0

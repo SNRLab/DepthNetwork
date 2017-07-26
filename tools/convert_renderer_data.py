@@ -1,21 +1,25 @@
 #!/usr/bin/env python3
 
-import depth_network.data_utils as data_utils
 import argparse
-import logging
-import h5py
 import glob
+import logging
 import os.path
 import sys
-import numpy as np
+
 import cv2
+import h5py
+import numpy as np
+
+import depth_network.data_utils as data_utils
 
 IMAGE_SIZE = (100, 100)
 
-_logger = logging.getLogger('convert_unity_data')
+logging.basicConfig(level=logging.INFO)
 
 
 def main():
+    logger = logging.getLogger('convert_unity_data')
+
     parser = argparse.ArgumentParser(description=
                                      "Converts PNG and EXR data files created by the Unity renderer to HDF5 datasets. "
                                      "This script makes some naive assumptions, such as that the files have not been "
@@ -34,7 +38,7 @@ def main():
     depth_images = glob.glob(os.path.join(args.data_dir, 'depth_*.exr'))
 
     if len(brdf_images) != len(depth_images):
-        _logger.critical("Unequal numbers of BRDF and depth images")
+        logger.critical("Unequal numbers of BRDF and depth images")
         sys.exit(1)
 
     brdf_dataset = brdf_file.create_dataset('BRDF', (len(brdf_images), 3, *IMAGE_SIZE), np.uint8)
@@ -43,7 +47,7 @@ def main():
     for i, (brdf_image, depth_image) in enumerate(zip(sorted(brdf_images), sorted(depth_images))):
         # Not super robust or flexible, but it will work for now
         if brdf_image[-28:-4] != depth_image[-28:-4]:
-            _logger.critical("Depth image (%s) and BRDF image (%s) not paired correctly", brdf_image, depth_image)
+            logger.critical("Depth image (%s) and BRDF image (%s) not paired correctly", brdf_image, depth_image)
             sys.exit(2)
 
         brdf_image = np.rollaxis(cv2.imread(brdf_image), 2, 0)

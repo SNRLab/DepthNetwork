@@ -8,13 +8,15 @@ import numpy as np
 
 import depth_network.common as common
 
-_logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
 
 def main():
+    logger = logging.getLogger(__name__)
+
     render_model, depth_model = common.load_models(create=True)
     if render_model is None or depth_model is None:
-        _logger.critical("Could not load render and/or depth models.")
+        logger.critical("Could not load render and/or depth models.")
         sys.exit(1)
 
     rgb_data = h5py.File(common.rgb_data_file, 'r')
@@ -53,7 +55,7 @@ def main():
         brdf_image_pred = np.transpose(brdf_batch_pred_post[0], (1, 2, 0))
         brdf_image_pred = cv2.cvtColor(brdf_image_pred, cv2.COLOR_BGR2RGB)
         brdf_diff = np.abs(brdf_image_true - brdf_image_pred)
-        _logger.info('index: %s, mse: %s, mae: %s', i, (brdf_diff ** 2).mean(), brdf_diff.mean())
+        logger.info('index: %s, mse: %s, mae: %s', i, (brdf_diff ** 2).mean(), brdf_diff.mean())
 
         depth_image_pred = depth_batch_pred_post[0][0]
         depth_image_pred2 = depth_batch_pred2_post[0][0]

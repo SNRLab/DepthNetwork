@@ -8,10 +8,12 @@ import yaml
 import depth_network.data_utils as data_utils
 import depth_network.train as train
 
-_logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
 
 def main():
+    logger = logging.getLogger(__name__)
+
     parser = argparse.ArgumentParser(description="Perform k-fold cross validation of the networks.")
     parser.add_argument('config', type=argparse.FileType('r'))
     args = parser.parse_args()
@@ -32,7 +34,7 @@ def main():
     depth_data_file = config['depth_data']
 
     for i in range(folds):
-        _logger.info("Started fold %d", i)
+        logger.info("Started fold %d", i)
         fold_output_dir = os.path.join(output_dir, '{:02d}'.format(i))
         os.mkdir(fold_output_dir)
 

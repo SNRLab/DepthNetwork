@@ -8,7 +8,7 @@ from keras.callbacks import ModelCheckpoint, Callback
 import depth_network.common as common
 from depth_network.data_utils import HDFGenerator
 
-_logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
 
 class LoggerCallback(Callback):
@@ -68,7 +68,7 @@ def _train_network(model, x_train_file, y_train_file, x_validation_file, y_valid
 
     model_checkpoint = ModelCheckpoint(checkpoint_file_format, monitor='val_loss', save_best_only=False,
                                        save_weights_only=True)
-    logger_callback = LoggerCallback(_logger)
+    logger_callback = LoggerCallback(logging.getLogger(__name__))
 
     model.fit_generator(train_data_generator(), steps_per_epoch=train_data_generator.steps_per_epoch,
                         validation_data=validation_data_generator(),
