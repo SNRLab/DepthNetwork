@@ -41,8 +41,8 @@ def main():
         logger.critical("Unequal numbers of BRDF and depth images")
         sys.exit(1)
 
-    brdf_dataset = brdf_file.create_dataset('BRDF', (len(brdf_images), 3, *IMAGE_SIZE), np.uint8)
-    depth_dataset = depth_file.create_dataset('Z', (len(brdf_images), 1, *IMAGE_SIZE), np.float16)
+    brdf_dataset = brdf_file.create_dataset('BRDF', (len(brdf_images), 3) + IMAGE_SIZE, np.uint8)
+    depth_dataset = depth_file.create_dataset('Z', (len(brdf_images), 1) + IMAGE_SIZE, np.float16)
 
     for i, (brdf_image, depth_image) in enumerate(zip(sorted(brdf_images), sorted(depth_images))):
         # Not super robust or flexible, but it will work for now
@@ -53,8 +53,8 @@ def main():
         brdf_image = np.rollaxis(cv2.imread(brdf_image), 2, 0)
         depth_image = np.rollaxis(data_utils.read_exr_depth(depth_image), 2, 0)
 
-        assert brdf_image.shape == (3, *IMAGE_SIZE)
-        assert depth_image.shape == (1, *IMAGE_SIZE)
+        assert brdf_image.shape == (3,) + IMAGE_SIZE
+        assert depth_image.shape == (1,) + IMAGE_SIZE
 
         brdf_dataset[i] = brdf_image
         depth_dataset[i] = depth_image

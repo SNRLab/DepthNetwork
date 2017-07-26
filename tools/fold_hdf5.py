@@ -14,8 +14,6 @@ def _u(string):
 
 
 def main():
-    logger = logging.getLogger("fold_hdf5")
-
     parser = argparse.ArgumentParser(description="Fold an HDF5 dataset into training and validation sets.")
     parser.add_argument('-t', '--training-file', help="output training file", required=True)
     parser.add_argument('-v', '--validation-file', help="output validation file", required=True)
