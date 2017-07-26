@@ -4,8 +4,14 @@ import random
 
 import numpy as np
 from h5py import h5d, h5f, h5s, h5p, h5t
+import OpenEXR
+import Imath
 
 _logger = logging.getLogger(__name__)
+
+
+def _u(string):
+    return bytes(string, 'UTF-8')
 
 
 class HDFGenerator:
@@ -92,10 +98,6 @@ class HDFGenerator:
     @property
     def steps_per_epoch(self):
         return int(math.ceil(len(self.x_dataset) / self.batch_size))
-
-
-def _u(string):
-    return bytes(string, 'UTF-8')
 
 
 def merge_data_files(file_path, source_files, dataset_name):
@@ -208,3 +210,14 @@ def fold_data(file_path, train_file_path, validation_file_path, dataset_name, va
 
     dataspace.close()
     file.close()
+
+
+def read_exr_depth(file):
+    file = OpenEXR.InputFile(file)
+    data_window = file.header()['dataWindow']
+    size = (data_window.max.x - data_window.min.x + 1, data_window.max.y - data_window.min.y + 1)
+
+    HALF = Imath.PixelType(Imath.PixelType.HALF)
+    data = np.expand_dims(np.frombuffer(file.channel('R', HALF), np.float16).reshape(size), -1)
+
+    return data

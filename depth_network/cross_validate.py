@@ -12,7 +12,7 @@ _logger = logging.getLogger(__name__)
 
 
 def main():
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description="Perform k-fold cross validation of the networks.")
     parser.add_argument('config', type=argparse.FileType('r'))
     args = parser.parse_args()
 

@@ -73,7 +73,7 @@ def _train_network(model, x_train_file, y_train_file, x_validation_file, y_valid
     model.fit_generator(train_data_generator(), steps_per_epoch=train_data_generator.steps_per_epoch,
                         validation_data=validation_data_generator(),
                         validation_steps=validation_data_generator.steps_per_epoch, epochs=epochs,
-                        callbacks=[model_checkpoint, logger_callback])
+                        callbacks=[model_checkpoint, logger_callback], verbose=0)
 
     model.save_weights(output_file)
 

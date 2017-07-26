@@ -1,0 +1,20 @@
+log_file: data/paper/model/train.log
+data:
+  rgb:
+    train_data: data/paper/rgb_train.hdf5
+    validation_data: data/paper/rgb_validation.hdf5
+  brdf:
+    train_data: data/paper/brdf_train.hdf5
+    validation_data: data/paper/brdf_validation.hdf5
+  depth:
+    train_data: data/paper/depth_train.hdf5
+    validation_data: datal/paper/depth_validation.hdf5
+train:
+  epochs: 30
+  render:
+    checkpoint_file_format: 'data/model/render_{epoch:02d}_{val_loss:.5f}.hdf5'
+    output_file: data/paper/model/render.hdf5
+  depth:
+    checkpoint_file_format: 'data/model/depth_{epoch:02d}_{val_loss:.5f}.hdf5'
+    output_file: data/paper/model/depth.hdf5
+

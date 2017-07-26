@@ -1,0 +1,6 @@
+log_file: data/paper/model/cross_validation/cross_validation.log
+folds: 10
+output_dir: data/paper/model/cross_validation
+rgb_data: data/paper/rgb.hdf5
+brdf_data: data/paper/brdf.hdf5
+depth_data: data/paper/depth.hdf5

@@ -1,4 +1,5 @@
 import logging
+import sys
 
 import cv2
 import h5py
@@ -6,8 +7,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 import depth_network.common as common
-import sys
-import logging
 
 _logger = logging.getLogger(__name__)
 
@@ -15,7 +14,7 @@ _logger = logging.getLogger(__name__)
 def main():
     render_model, depth_model = common.load_models(create=True)
     if render_model is None or depth_model is None:
-        logging.critical("Could not load render and/or depth models.")
+        _logger.critical("Could not load render and/or depth models.")
         sys.exit(1)
 
     rgb_data = h5py.File(common.rgb_data_file, 'r')

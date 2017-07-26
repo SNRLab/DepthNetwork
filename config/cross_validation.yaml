@@ -1,6 +1,0 @@
-log_file: logs/cross_validation.log
-folds: 10
-output_dir: data/model/cross_validation
-rgb_data: data/rgb.hdf5
-brdf_data: data/brdf.hdf5
-depth_data: data/depth.hdf5
