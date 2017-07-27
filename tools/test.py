@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
 
+"""
+Load pretrained models and view their output. The image index is selected
+interactively on the terminal, and matplotlib is used to display the output.
+"""
+
 import argparse
 import logging
 import sys

@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Loads the weights created by train.sh and allows viewing of the results
+
 BASE="$(dirname "$(readlink -f "$0")")"/../..
 export PYTHONPATH="${BASE}"
 

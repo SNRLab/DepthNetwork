@@ -1,5 +1,13 @@
 #!/usr/bin/env python3
 
+"""
+Train one or both networks. The behavior of this script is controlled by a YAML
+config file. An example config file is available in `tools/paper/train.yaml`.
+The continue option allows a network to resume training from specified epoch.
+This loads the output file and subtracts from the number of epochs in the
+config file.
+"""
+
 import argparse
 import logging
 

@@ -1,5 +1,14 @@
 #!/usr/bin/env python3
 
+"""
+Folds an HDF5 dataset into two files. The validation file consists of one fold,
+while the training file consists of all the other folds. The -i parameter
+controls which fold becomes the validation fold.
+
+The output files do not contain copies of the data, only references to the
+input file.
+"""
+
 import argparse
 import logging
 import sys
