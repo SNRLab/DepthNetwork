@@ -1,15 +1,9 @@
 import logging
-import os.path
 import sys
 
-import keras.backend
-import keras.models
 import matplotlib.pyplot as plt
 import numpy as np
 import skimage.transform
-from keras.optimizers import Adam
-
-import depth_network.model as model
 
 
 def handle_exception(exc_type, exc_value, exc_traceback):
@@ -18,31 +12,9 @@ def handle_exception(exc_type, exc_value, exc_traceback):
 
 sys.excepthook = handle_exception
 
-keras.backend.set_image_data_format('channels_first')
-
-data_dir = 'data'
-rgb_data_file = os.path.join(data_dir, 'rgb.hdf5')
-rgb_train_data_file = os.path.join(data_dir, 'rgb_train.hdf5')
-rgb_validation_data_file = os.path.join(data_dir, 'rgb_validation.hdf5')
-brdf_data_file = os.path.join(data_dir, 'brdf.hdf5')
-brdf_train_data_file = os.path.join(data_dir, 'brdf_train.hdf5')
-brdf_validation_data_file = os.path.join(data_dir, 'brdf_validation.hdf5')
-depth_data_file = os.path.join(data_dir, 'depth.hdf5')
-depth_train_data_file = os.path.join(data_dir, 'depth_train.hdf5')
-depth_validation_data_file = os.path.join(data_dir, 'depth_validation.hdf5')
-
-render_model_file = os.path.join(data_dir, 'render_model.hdf5')
-render_model_checkpoint_file = os.path.join(data_dir, 'render_model_{epoch:02d}_{val_loss:.5f}.hdf5')
-depth_model_file = os.path.join(data_dir, 'depth_model.hdf5')
-depth_model_checkpoint_file = os.path.join(data_dir, 'depth_model_{epoch:02d}_{val_loss:.5f}.hdf5')
-
-log_dir = 'logs'
-
 image_size = (64, 64)
-
-
-def load_models(create=False):
-    return load_render_model(create), load_depth_model(create)
+depth_divider = 150
+brdf_divider = 5000
 
 
 def load_render_model(file, create=False):
@@ -54,9 +26,11 @@ def load_depth_model(file, create=False):
 
 
 def _load_model(file, input_shape=None, output_channels=1, loss='mean_squared_error', name='depth_net', create=False):
+    import depth_network.model
+
     logger = logging.getLogger(__name__)
     logger.info("Loading model...")
-    m = model.DepthNetwork(input_shape=input_shape, output_channels=output_channels, name=name)
+    m = depth_network.model.DepthNetwork(input_shape=input_shape, output_channels=output_channels, name=name)
     _compile_model(m, loss=loss)
     try:
         logger.info("Loading model weights from %s...", file)
@@ -69,6 +43,8 @@ def _load_model(file, input_shape=None, output_channels=1, loss='mean_squared_er
 
 
 def _compile_model(m, loss='mean_squared_error'):
+    from keras.optimizers import Adam
+
     logger = logging.getLogger(__name__)
     logger.info("Compiling model...")
     m.compile(loss=loss, optimizer=Adam(lr=0.001), metrics=[dice_coef, 'accuracy'])
@@ -100,14 +76,14 @@ def preprocess_depth_batch(depths):
     # Rows and columns are switched in HDF files
     depths = np.transpose(depths, (0, 1, 3, 2))
     # Scale data between 0 and 1
-    depths /= 150
+    depths /= depth_divider
     np.clip(depths, 0, 1, depths)
     return preprocess_batch(depths)
 
 
 def preprocess_brdf_batch(brdfs):
     # Magic number to scale data into appropriate range
-    brdfs /= 5000
+    brdfs /= brdf_divider
     np.clip(brdfs, 0, 1, brdfs)
     return preprocess_batch(brdfs)
 
@@ -148,6 +124,8 @@ smooth = 1.
 
 
 def dice_coef(y_true, y_pred):
+    import keras.models
+
     y_true_f = keras.backend.flatten(y_true)
     y_pred_f = keras.backend.flatten(y_pred)
     intersection = keras.backend.sum(y_true_f * y_pred_f)

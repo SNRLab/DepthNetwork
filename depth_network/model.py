@@ -4,6 +4,8 @@ from keras.layers.convolutional import Conv2D, Conv2DTranspose
 from keras.layers.normalization import BatchNormalization
 from keras.models import Model
 
+K.set_image_data_format('channels_first')
+
 
 def DepthNetwork(input_shape=None, output_channels=1, data_format=None, name='depth_net'):
     if data_format is None:

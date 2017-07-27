@@ -11,6 +11,7 @@ import h5py
 import numpy as np
 
 import depth_network.data_utils as data_utils
+import depth_network.common as common
 
 IMAGE_SIZE = (100, 100)
 
@@ -41,7 +42,7 @@ def main():
         logger.critical("Unequal numbers of BRDF and depth images")
         sys.exit(1)
 
-    brdf_dataset = brdf_file.create_dataset('BRDF', (len(brdf_images), 3) + IMAGE_SIZE, np.uint8)
+    brdf_dataset = brdf_file.create_dataset('BRDF', (len(brdf_images), 3) + IMAGE_SIZE, np.float32)
     depth_dataset = depth_file.create_dataset('Z', (len(brdf_images), 1) + IMAGE_SIZE, np.float16)
 
     for i, (brdf_image, depth_image) in enumerate(zip(sorted(brdf_images), sorted(depth_images))):
@@ -50,7 +51,10 @@ def main():
             logger.critical("Depth image (%s) and BRDF image (%s) not paired correctly", brdf_image, depth_image)
             sys.exit(2)
 
-        brdf_image = np.rollaxis(cv2.imread(brdf_image), 2, 0)
+        # The BRDF data included in the paper has a very large magnitude, so we scale it down between 0 and 1. My
+        # renderer outputs values between 0 and 255, so we have to scale them to have the same range as the data from
+        # the paper
+        brdf_image = (np.rollaxis(cv2.imread(brdf_image), 2, 0) / 255) * common.brdf_divider
         depth_image = np.rollaxis(data_utils.read_exr_depth(depth_image), 2, 0)
 
         assert brdf_image.shape == (3,) + IMAGE_SIZE
