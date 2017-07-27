@@ -31,6 +31,7 @@ def main():
 
     # Keras takes a long time to load, so defer it until after argument parsing
     import depth_network.common as common
+    import depth_network.model
 
     if args.render_model is not None:
         render_model = common.load_render_model(args.render_model, create=False)
@@ -86,29 +87,29 @@ def main():
 
         if rgb_images is not None:
             # Preprocess RGB ground truth image
-            rgb_batch_true_pre = common.preprocess_rgb_batch(rgb_images[i:i + 1])
-            rgb_image_true = np.transpose(common.postprocess_rgb_batch(rgb_batch_true_pre)[0], (1, 2, 0)).astype(
-                np.float32)
+            rgb_batch_true_pre = depth_network.model.preprocess_rgb_batch(rgb_images[i:i + 1])
+            rgb_image_true = np.transpose(depth_network.model.postprocess_rgb_batch(rgb_batch_true_pre)[0],
+                                          (1, 2, 0)).astype(np.float32)
             rgb_image_true = cv2.cvtColor(rgb_image_true, cv2.COLOR_BGR2RGB)
             images.append(rgb_image_true)
 
         # Preprocess BRDF ground truth image
-        brdf_batch_true_pre = common.preprocess_brdf_batch(brdf_images[i:i + 1])
-        brdf_image_true = np.transpose(common.postprocess_rgb_batch(brdf_batch_true_pre)[0], (1, 2, 0)).astype(
-            np.float32)
+        brdf_batch_true_pre = depth_network.model.preprocess_brdf_batch(brdf_images[i:i + 1])
+        brdf_image_true = np.transpose(depth_network.model.postprocess_rgb_batch(brdf_batch_true_pre)[0],
+                                       (1, 2, 0)).astype(np.float32)
         brdf_image_true = cv2.cvtColor(brdf_image_true, cv2.COLOR_BGR2RGB)
         images.append(brdf_image_true)
 
         if depth_images is not None:
             # Preprocess depth ground truth image
-            depth_batch_true_pre = common.preprocess_depth_batch(depth_images[i:i + 1])
-            depth_image_true = common.postprocess_depth_batch(depth_batch_true_pre)[0][0]
+            depth_batch_true_pre = depth_network.model.preprocess_depth_batch(depth_images[i:i + 1])
+            depth_image_true = depth_network.model.postprocess_depth_batch(depth_batch_true_pre)[0][0]
             images.append(depth_image_true)
 
         if render_model is not None:
             # Predict BRDF from ground truth RGB image
             brdf_batch_pred = render_model.predict(rgb_batch_true_pre)
-            brdf_batch_pred_post = common.postprocess_rgb_batch(brdf_batch_pred)
+            brdf_batch_pred_post = depth_network.model.postprocess_rgb_batch(brdf_batch_pred)
 
             brdf_image_pred = np.transpose(brdf_batch_pred_post[0], (1, 2, 0))
             brdf_image_pred = cv2.cvtColor(brdf_image_pred, cv2.COLOR_BGR2RGB)
@@ -119,12 +120,14 @@ def main():
         if depth_model is not None:
             if render_model is not None:
                 # Predict depth from predicted BRDF
-                depth_batch_pred_post = common.postprocess_depth_batch(depth_model.predict(brdf_batch_pred))
+                depth_batch_pred_post = depth_network.model.postprocess_depth_batch(
+                    depth_model.predict(brdf_batch_pred))
                 depth_image_pred = depth_batch_pred_post[0][0]
                 images.append(depth_image_pred)
 
             # Predict depth from ground truth BRDF
-            depth_batch_pred2_post = common.postprocess_depth_batch(depth_model.predict(brdf_batch_true_pre))
+            depth_batch_pred2_post = depth_network.model.postprocess_depth_batch(
+                depth_model.predict(brdf_batch_true_pre))
             depth_image_pred2 = depth_batch_pred2_post[0][0]
             images.append(depth_image_pred2)
 

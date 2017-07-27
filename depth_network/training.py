@@ -1,14 +1,14 @@
-import argparse
+"""
+Utility functions to train the network.
+"""
+
 import logging
 
 import h5py
-import yaml
 from keras.callbacks import ModelCheckpoint, Callback
 
 import depth_network.common as common
 from depth_network.data_utils import HDFGenerator
-
-logging.basicConfig(level=logging.INFO)
 
 
 class LoggerCallback(Callback):
@@ -56,7 +56,7 @@ class LoggerCallback(Callback):
 
 
 def _train_network(model, x_train_file, y_train_file, x_validation_file, y_validation_file, x_dataset, y_dataset,
-                   checkpoint_file_format, output_file, data_normalizer, epochs):
+                   checkpoint_file_format, output_file, data_normalizer, epochs, verbose=1):
     x_train_data = h5py.File(x_train_file, 'r')
     y_train_data = h5py.File(y_train_file, 'r')
     x_validation_data = h5py.File(x_validation_file, 'r')
@@ -73,56 +73,18 @@ def _train_network(model, x_train_file, y_train_file, x_validation_file, y_valid
     model.fit_generator(train_data_generator(), steps_per_epoch=train_data_generator.steps_per_epoch,
                         validation_data=validation_data_generator(),
                         validation_steps=validation_data_generator.steps_per_epoch, epochs=epochs,
-                        callbacks=[model_checkpoint, logger_callback], verbose=0)
+                        callbacks=[model_checkpoint, logger_callback], verbose=verbose)
 
     model.save_weights(output_file)
 
 
-def train_render_network(rgb_train_file, brdf_train_file, rgb_validation_file, brdf_validation_file,
-                         checkpoint_file_format, output_file, epochs=30):
-    render_model = common.load_render_model(create=True)
-
-    _train_network(render_model, rgb_train_file, brdf_train_file, rgb_validation_file, brdf_validation_file, 'RGB',
-                   'BRDF', checkpoint_file_format, output_file, common.render_data_normalizer, epochs)
+def train_render_network(model, rgb_train_file, brdf_train_file, rgb_validation_file, brdf_validation_file,
+                         checkpoint_file_format, output_file, epochs=30, verbose=1):
+    _train_network(model, rgb_train_file, brdf_train_file, rgb_validation_file, brdf_validation_file, 'RGB',
+                   'BRDF', checkpoint_file_format, output_file, common.render_data_normalizer, epochs, verbose)
 
 
-def train_depth_network(brdf_train_file, depth_train_file, brdf_validation_file, depth_validation_file,
-                        checkpoint_file_format, output_file, epochs=30):
-    depth_model = common.load_depth_model(create=True)
-
-    _train_network(depth_model, brdf_train_file, depth_train_file, brdf_validation_file, depth_validation_file, 'BRDF',
-                   'Z', checkpoint_file_format, output_file, common.depth_data_normalizer, epochs)
-
-
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('config', type=argparse.FileType('r'))
-    args = parser.parse_args()
-
-    config = yaml.load(args.config)
-
-    log_file = config.get('log_file', None)
-    if log_file is not None:
-        fh = logging.FileHandler(log_file)
-        fh.setFormatter(logging.Formatter('%(asctime)s\t%(levelname)s:%(name)s: %(message)s'))
-        fh.setLevel(logging.DEBUG)
-        logging.getLogger().addHandler(fh)
-
-    data_config = config.get('data', {})
-    train_config = config.get('train', {})
-    train_render_config = train_config.get('render', None)
-    train_depth_config = train_config.get('depth', None)
-    epochs = train_config.get('epochs', 30)
-
-    if train_render_config is not None:
-        train_render_network(data_config['rgb']['train_data'], data_config['brdf']['train_data'],
-                             data_config['rgb']['validation_data'], data_config['brdf']['validation_data'],
-                             train_render_config['checkpoint_file_format'], train_render_config['output_file'], epochs)
-    if train_depth_config is not None:
-        train_depth_network(data_config['brdf']['train_data'], data_config['depth']['train_data'],
-                            data_config['brdf']['validation_data'], data_config['depth']['validation_data'],
-                            train_depth_config['checkpoint_file_format'], train_depth_config['output_file'], epochs)
-
-
-if __name__ == '__main__':
-    main()
+def train_depth_network(model, brdf_train_file, depth_train_file, brdf_validation_file, depth_validation_file,
+                        checkpoint_file_format, output_file, epochs=30, verbose=1):
+    _train_network(model, brdf_train_file, depth_train_file, brdf_validation_file, depth_validation_file, 'BRDF',
+                   'Z', checkpoint_file_format, output_file, common.depth_data_normalizer, epochs, verbose)

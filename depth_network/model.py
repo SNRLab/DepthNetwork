@@ -1,8 +1,17 @@
+"""
+Implementation of the neural network as well as model specific utility functions
+for pre/postprocessing data
+"""
+
 import keras.backend as K
+import numpy as np
+import skimage.transform
 from keras.layers import MaxPooling2D, UpSampling2D, Activation, Input
 from keras.layers.convolutional import Conv2D, Conv2DTranspose
 from keras.layers.normalization import BatchNormalization
 from keras.models import Model
+
+from depth_network.common import image_size, depth_divider, brdf_divider
 
 K.set_image_data_format('channels_first')
 
@@ -77,3 +86,50 @@ def _beta_common(input_tensor, name, data_format=None):
     x = BatchNormalization(axis=axis, name=name + "_batch_norm")(input_tensor)
     x = Activation('relu', name=name + "_activation")(x)
     return x
+
+
+def preprocess_batch(images):
+    new_images = np.empty((images.shape[0], images.shape[1]) + image_size)
+
+    for i, image in enumerate(images):
+        new_image = skimage.transform.rescale(image.transpose((1, 2, 0)), (0.5, 0.5), preserve_range=True,
+                                              mode='constant').transpose((2, 0, 1))
+        left_padding = round((image_size[1] - new_image.shape[2]) / 2)
+        right_padding = 64 - new_image.shape[2] - left_padding
+        top_padding = round((image_size[0] - new_image.shape[1]) / 2)
+        bottom_padding = 64 - new_image.shape[1] - top_padding
+        padding = ((0, 0), (top_padding, bottom_padding), (left_padding, right_padding))
+        new_image = np.pad(new_image, padding, mode='reflect')
+        new_images[i] = new_image
+
+    return new_images
+
+
+def preprocess_rgb_batch(images):
+    images /= 255.
+    return preprocess_batch(images)
+
+
+def preprocess_depth_batch(depths):
+    # Rows and columns are switched in HDF files
+    depths = np.transpose(depths, (0, 1, 3, 2))
+    # Scale data between 0 and 1
+    depths /= depth_divider
+    np.clip(depths, 0, 1, depths)
+    return preprocess_batch(depths)
+
+
+def preprocess_brdf_batch(brdfs):
+    # Magic number to scale data into appropriate range
+    brdfs /= brdf_divider
+    np.clip(brdfs, 0, 1, brdfs)
+    return preprocess_batch(brdfs)
+
+
+def postprocess_rgb_batch(images):
+    images = np.clip(images, 0, 1)
+    return images[:, :3, 7:57, 7:57]
+
+
+def postprocess_depth_batch(depth):
+    return depth[:, :1, 7:57, 7:57]

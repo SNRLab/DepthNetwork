@@ -6,7 +6,7 @@ import os.path
 import yaml
 
 import depth_network.data_utils as data_utils
-import depth_network.train as train
+import depth_network.training as train
 
 logging.basicConfig(level=logging.INFO)
 
@@ -53,12 +53,12 @@ def main():
         train.train_render_network(rgb_train_data_file, brdf_train_data_file, rgb_validation_data_file,
                                    brdf_validation_data_file,
                                    os.path.join(fold_output_dir, 'render_model_{epoch:02d}.hdf5'),
-                                   os.path.join(fold_output_dir, 'render_model.hdf5'))
+                                   os.path.join(fold_output_dir, 'render.hdf5'))
 
         train.train_depth_network(brdf_train_data_file, depth_train_data_file, brdf_validation_data_file,
                                   depth_validation_data_file,
                                   os.path.join(fold_output_dir, 'depth_model_{epoch:02d}.hdf5'),
-                                  os.path.join(fold_output_dir, 'depth_model.hdf5'))
+                                  os.path.join(fold_output_dir, 'depth.hdf5'))
 
 
 if __name__ == '__main__':

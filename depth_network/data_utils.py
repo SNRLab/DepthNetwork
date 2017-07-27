@@ -1,3 +1,7 @@
+"""
+Generic utilities for working with HDF5 data files. Not specific to the algorithm.
+"""
+
 import OpenEXR
 import logging
 import math
@@ -171,7 +175,7 @@ def fold_data(file_path, train_file_path, validation_file_path, dataset_name, va
     num_train_before = fold_size * validation_fold
     num_train_after = dataspace.shape[0] - num_validation - num_train_before
     logger.info("Folding dataset %s: | train: %d | val: %d | train: %d |", file_path, num_train_before, num_validation,
-                 num_train_after)
+                num_train_after)
     assert num_validation + num_train_after + num_train_before == dataspace.shape[0]
     assert num_validation > 0
     assert (num_train_before >= 0 and num_train_after > 0) or (num_train_before > 0 and num_train_after >= 0)
