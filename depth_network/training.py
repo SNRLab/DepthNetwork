@@ -68,13 +68,14 @@ class LoggerCallback(Callback):
 
 
 def _train_network(model, x_train_file, y_train_file, x_validation_file, y_validation_file, x_dataset, y_dataset,
-                   checkpoint_file_format, output_file, data_normalizer, epochs, verbose=1):
+                   checkpoint_file_format, output_file, data_normalizer, data_normalizer_params, epochs, verbose=1):
     x_train_data = h5py.File(x_train_file, 'r')
     y_train_data = h5py.File(y_train_file, 'r')
     x_validation_data = h5py.File(x_validation_file, 'r')
     y_validation_data = h5py.File(y_validation_file, 'r')
     train_data_generator = HDFGenerator(x_train_data[x_dataset], y_train_data[y_dataset], batch_size=16,
-                                        normalizer=data_normalizer, shuffle=True)
+                                        normalizer=data_normalizer, normalizer_params=data_normalizer_params,
+                                        shuffle=True)
     validation_data_generator = HDFGenerator(x_validation_data[x_dataset], y_validation_data[y_dataset], batch_size=64,
                                              normalizer=data_normalizer, shuffle=False)
 
@@ -107,24 +108,26 @@ def train_render_network(model, rgb_train_file, brdf_train_file, rgb_validation_
     :param verbose: same as :func:`keras.models.Model.fit`
     """
     _train_network(model, rgb_train_file, brdf_train_file, rgb_validation_file, brdf_validation_file, 'RGB',
-                   'BRDF', checkpoint_file_format, output_file, common.render_data_normalizer, epochs, verbose)
+                   'BRDF', checkpoint_file_format, output_file, common.render_data_normalizer, {}, epochs, verbose)
 
 
 def train_depth_network(model, brdf_train_file, depth_train_file, brdf_validation_file, depth_validation_file,
-                        checkpoint_file_format, output_file, epochs=30, verbose=1):
+                        checkpoint_file_format, output_file, epochs=30, verbose=1, swap_depth_axes=False):
     """
     Train the BRDF->depth network.
 
     :param model: loaded and compiled model
-    :param rgb_train_file: name of the BRDF training data file
-    :param brdf_train_file: name of the depth training data file
-    :param rgb_validation_file: name of the BRDF validation data file
-    :param brdf_validation_file: name of the depth validation data file
+    :param brdf_train_file: name of the BRDF training data file
+    :param depth_train_file: name of the depth training data file
+    :param brdf_validation_file: name of the BRDF validation data file
+    :param depth_validation_file: name of the depth validation data file
     :param checkpoint_file_format: format of the filename for storing model
     checkpoints, using the str.format() syntax and keras metrics for variables
     :param output_file: output file for the completed model
     :param epochs: number of epochs to train
     :param verbose: same as :func:`keras.models.Model.fit`
+    :param swap_depth_axes: if true, swap the axes of the depth data
     """
     _train_network(model, brdf_train_file, depth_train_file, brdf_validation_file, depth_validation_file, 'BRDF',
-                   'Z', checkpoint_file_format, output_file, common.depth_data_normalizer, epochs, verbose)
+                   'Z', checkpoint_file_format, output_file, common.depth_data_normalizer,
+                   {'swap_depth_axes': swap_depth_axes}, epochs, verbose)

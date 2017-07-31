@@ -25,6 +25,8 @@ def main():
     parser.add_argument('--rgb', help='RGB data file')
     parser.add_argument('--brdf', help='BRDF data file', required=True)
     parser.add_argument('--depth', help='depth data file')
+    parser.add_argument('--swap-depth-axes', help='swap axes in depth images (required for sample data from paper)',
+                        action='store_true')
     args = parser.parse_args()
 
     if args.render_model is None and args.depth_model is None:
@@ -107,7 +109,8 @@ def main():
 
         if depth_images is not None:
             # Preprocess depth ground truth image
-            depth_batch_true_pre = depth_network.model.preprocess_depth_batch(depth_images[i:i + 1])
+            depth_batch_true_pre = depth_network.model.preprocess_depth_batch(depth_images[i:i + 1],
+                                                                              swap_axes=args.swap_depth_axes)
             depth_image_true = depth_network.model.postprocess_depth_batch(depth_batch_true_pre)[0][0]
             images.append(depth_image_true)
 

@@ -60,10 +60,11 @@ def render_data_normalizer(images, brdfs):
     return images, brdfs
 
 
-def depth_data_normalizer(brdfs, depths):
+def depth_data_normalizer(brdfs, depths, swap_depth_axes=False):
     from depth_network.model import preprocess_depth_batch, preprocess_brdf_batch
 
-    return preprocess_brdf_batch(brdfs), preprocess_depth_batch(depths)
+    # TODO: find a way to make axis swapping configurable
+    return preprocess_brdf_batch(brdfs), preprocess_depth_batch(depths, swap_axes=swap_depth_axes)
 
 
 def normalize_image_range(image):

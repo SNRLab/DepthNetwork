@@ -21,7 +21,7 @@ class HDFGenerator:
     Generator that loads data from an HDF5 file and normalizes it.
     """
 
-    def __init__(self, x_dataset, y_dataset, batch_size=16, shuffle=False, normalizer=None):
+    def __init__(self, x_dataset, y_dataset, batch_size=16, shuffle=False, normalizer=None, normalizer_params=None):
         """
         Create an HDFGenerator.
 
@@ -39,10 +39,11 @@ class HDFGenerator:
         """
         self.x_dataset = x_dataset
         self.y_dataset = y_dataset
-        self.cur_index = (len(x_dataset) // batch_size) - 3
+        self.cur_index = 0
         self.batch_size = batch_size
         self.shuffle = shuffle
         self.normalizer = normalizer
+        self.normalizer_params = normalizer_params
 
         assert len(x_dataset) == len(y_dataset)
 
@@ -87,7 +88,10 @@ class HDFGenerator:
                 y_batch = y_batch[p]
 
             if self.normalizer is not None:
-                x_batch, y_batch = self.normalizer(x_batch, y_batch)
+                if self.normalizer_params is not None:
+                    x_batch, y_batch = self.normalizer(x_batch, y_batch, **self.normalizer_params)
+                else:
+                    x_batch, y_batch = self.normalizer(x_batch, y_batch)
 
             assert len(x_batch) == len(y_batch) == self.batch_size
 

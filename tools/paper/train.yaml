@@ -8,7 +8,8 @@ data:
     validation_data: data/paper/brdf_validation.hdf5
   depth:
     train_data: data/paper/depth_train.hdf5
-    validation_data: datal/paper/depth_validation.hdf5
+    validation_data: data/paper/depth_validation.hdf5
+    swap_axes: true
 train:
   epochs: 30
   render:

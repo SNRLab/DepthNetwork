@@ -9,4 +9,5 @@ export PYTHONPATH="${BASE}"
                         --brdf "${BASE}/data/paper/brdf.hdf5" \
                         --depth "${BASE}/data/paper/depth.hdf5" \
                         -d "${BASE}/data/paper/model/depth.hdf5" \
-                        -r "${BASE}/data/paper/model/render.hdf5"
+                        -r "${BASE}/data/paper/model/render.hdf5" \
+                        --swap-depth-axes

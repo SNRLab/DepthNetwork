@@ -13,7 +13,7 @@ import logging
 
 import yaml
 
-logging.basicConfig(level=logging.WARNING)
+logging.basicConfig(level=logging.DEBUG)
 
 
 def main():
@@ -70,7 +70,8 @@ def main():
 
         train_depth_network(depth_model, data_config['brdf']['train_data'], data_config['depth']['train_data'],
                             data_config['brdf']['validation_data'], data_config['depth']['validation_data'],
-                            train_depth_config['checkpoint_file_format'], depth_output_file, epochs, verbose=1)
+                            train_depth_config['checkpoint_file_format'], depth_output_file, epochs, verbose=1,
+                            swap_depth_axes=data_config['depth'].get('swap_axes', False))
 
 
 if __name__ == '__main__':
