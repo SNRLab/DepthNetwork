@@ -17,10 +17,28 @@ brdf_divider = 5000
 
 
 def load_render_model(file, create=False):
+    """
+    Load a render model from a file or create a new one.
+
+    :param file: name of the file, or `None`, in which case, `create` must be
+    `True`
+    :param create: if `False`, the model won't be created if the file cannot be
+    loaded
+    :return: the model, or `None` if it could not be created
+    """
     return _load_model(file, output_channels=3, loss='mean_absolute_error', name='render_net', create=create)
 
 
 def load_depth_model(file, create=False):
+    """
+    Load a depth model from a file or create a new one.
+
+    :param file: name of the file, or `None`, in which case, `create` must be
+    `True`
+    :param create: if `False`, the model won't be created if the file cannot be
+    loaded
+    :return: the model, or `None` if it could not be created
+    """
     return _load_model(file, output_channels=1, name='depth_net', create=create)
 
 
@@ -63,17 +81,27 @@ def render_data_normalizer(images, brdfs):
 def depth_data_normalizer(brdfs, depths, swap_depth_axes=False):
     from depth_network.model import preprocess_depth_batch, preprocess_brdf_batch
 
-    # TODO: find a way to make axis swapping configurable
     return preprocess_brdf_batch(brdfs), preprocess_depth_batch(depths, swap_axes=swap_depth_axes)
 
 
 def normalize_image_range(image):
+    """
+    Normalizes an image between 1 and 0.
+
+    :param image: image to normalize
+    :return: normalized image
+    """
     min_val = np.min(image)
     max_val = np.max(image)
     return (image - min_val) / (max_val - min_val)
 
 
 def show_images(images):
+    """
+    Show a list of images using matplotlib.
+
+    :param images: images to display
+    """
     fig, axes = plt.subplots(1, len(images), figsize=(3 * len(images), 3))
     fig.set_tight_layout(True)
     for ax, img in zip(axes.ravel(), images):

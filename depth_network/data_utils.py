@@ -215,6 +215,13 @@ def fold_data(file_path, train_file_path, validation_file_path, dataset_name, va
 
 
 def read_exr_depth(file):
+    """
+    Read an EXR depth image file created by the Unity renderer into a NumPy
+    array. It assumes the depth is located in the red channel.
+
+    :param file: name of the file to read
+    :return: NumPy array with the depth data
+    """
     file = OpenEXR.InputFile(file)
     data_window = file.header()['dataWindow']
     size = (data_window.max.x - data_window.min.x + 1, data_window.max.y - data_window.min.y + 1)
