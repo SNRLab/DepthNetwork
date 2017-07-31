@@ -47,9 +47,6 @@ class HDFGenerator:
 
         assert len(x_dataset) == len(y_dataset)
 
-        # cv2.namedWindow("RGB", cv2.WINDOW_NORMAL)
-        # cv2.namedWindow("BRDF", cv2.WINDOW_NORMAL)
-
         if shuffle:
             self.shuffle_indices = list(range(int(math.ceil(len(x_dataset) / batch_size))))
             random.shuffle(self.shuffle_indices)
@@ -95,10 +92,6 @@ class HDFGenerator:
 
             assert len(x_batch) == len(y_batch) == self.batch_size
 
-            # for image, brdf in zip(x_batch, y_batch):
-            #     cv2.imshow("RGB", np.transpose(image, (1, 2, 0)))
-            #     cv2.imshow("BRDF", np.transpose(brdf, (1, 2, 0)))
-            #     cv2.waitKey()
             yield x_batch, y_batch
 
     @property
