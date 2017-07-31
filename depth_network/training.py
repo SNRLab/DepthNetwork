@@ -12,7 +12,19 @@ from depth_network.data_utils import HDFGenerator
 
 
 class LoggerCallback(Callback):
+    """
+    Callback that prints a nicely formatted log of a training session. Keras's
+    default logging callback only writes to stdout and assumes it is connected
+    to a TTY, which makes it ugly when redirected to a file.
+    """
+
     def __init__(self, base_logger):
+        """
+        Creates a LoggerCallback that logs to a child of the specified logger.
+        The child logger uses the name of the model.
+
+        :param base_logger: parent of the callback's logger
+        """
         super().__init__()
         self._base_logger = base_logger
         self._logger = None
@@ -80,11 +92,39 @@ def _train_network(model, x_train_file, y_train_file, x_validation_file, y_valid
 
 def train_render_network(model, rgb_train_file, brdf_train_file, rgb_validation_file, brdf_validation_file,
                          checkpoint_file_format, output_file, epochs=30, verbose=1):
+    """
+    Train the RGB->BRDF network.
+
+    :param model: loaded and compiled model
+    :param rgb_train_file: name of the RGB training data file
+    :param brdf_train_file: name of the BRDF training data file
+    :param rgb_validation_file: name of the RGB validation data file
+    :param brdf_validation_file: name of the BRDF validation data file
+    :param checkpoint_file_format: format of the filename for storing model
+    checkpoints, using the str.format() syntax and keras metrics for variables
+    :param output_file: output file for the completed model
+    :param epochs: number of epochs to train
+    :param verbose: same as :func:`keras.models.Model.fit`
+    """
     _train_network(model, rgb_train_file, brdf_train_file, rgb_validation_file, brdf_validation_file, 'RGB',
                    'BRDF', checkpoint_file_format, output_file, common.render_data_normalizer, epochs, verbose)
 
 
 def train_depth_network(model, brdf_train_file, depth_train_file, brdf_validation_file, depth_validation_file,
                         checkpoint_file_format, output_file, epochs=30, verbose=1):
+    """
+    Train the BRDF->depth network.
+
+    :param model: loaded and compiled model
+    :param rgb_train_file: name of the BRDF training data file
+    :param brdf_train_file: name of the depth training data file
+    :param rgb_validation_file: name of the BRDF validation data file
+    :param brdf_validation_file: name of the depth validation data file
+    :param checkpoint_file_format: format of the filename for storing model
+    checkpoints, using the str.format() syntax and keras metrics for variables
+    :param output_file: output file for the completed model
+    :param epochs: number of epochs to train
+    :param verbose: same as :func:`keras.models.Model.fit`
+    """
     _train_network(model, brdf_train_file, depth_train_file, brdf_validation_file, depth_validation_file, 'BRDF',
                    'Z', checkpoint_file_format, output_file, common.depth_data_normalizer, epochs, verbose)

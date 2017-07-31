@@ -17,6 +17,18 @@ K.set_image_data_format('channels_first')
 
 
 def DepthNetwork(input_shape=None, output_channels=1, data_format=None, name='depth_net'):
+    """
+    Create an instance of the network. Both the render and depth networks have
+    the same structure and are instantiated using this function.
+
+    Usually, the helpers functions in `common` are used instead of this function.
+
+    :param input_shape: the shape of the input tensor
+    :param output_channels: number of channels in the output tensor
+    :param data_format: 'channels_first' or 'channels_last'
+    :param name: name of the network
+    :return: an instance of the model
+    """
     if data_format is None:
         data_format = K.image_data_format()
 
@@ -89,6 +101,13 @@ def _beta_common(input_tensor, name, data_format=None):
 
 
 def preprocess_batch(images):
+    """
+    Process a batch of images to feed to the network. The images should be
+    100x100 in channels last format.
+
+    :param images: images to process
+    :return: the processed batch
+    """
     new_images = np.empty((images.shape[0], images.shape[1]) + image_size)
 
     for i, image in enumerate(images):
@@ -106,6 +125,13 @@ def preprocess_batch(images):
 
 
 def preprocess_rgb_batch(images):
+    """
+    Process a batch of RGB images to feed to the network. The images should be
+    100x100 in channels last format, with a range of 0-255.
+
+    :param images: images to process
+    :return: the processed batch
+    """
     images /= 255.
     return preprocess_batch(images)
 
