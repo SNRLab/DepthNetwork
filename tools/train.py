@@ -13,7 +13,9 @@ import logging
 
 import yaml
 
-logging.basicConfig(level=logging.DEBUG)
+stream_handler = logging.StreamHandler()
+stream_handler.setLevel(logging.WARNING)
+logging.basicConfig(level=logging.DEBUG, handlers=[stream_handler])
 
 
 def main():

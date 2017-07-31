@@ -21,7 +21,9 @@ import depth_network.data_utils as data_utils
 import depth_network.training as train
 import depth_network.common as common
 
-logging.basicConfig(level=logging.INFO)
+stream_handler = logging.StreamHandler()
+stream_handler.setLevel(logging.WARNING)
+logging.basicConfig(level=logging.DEBUG, handlers=[stream_handler])
 
 
 def main():

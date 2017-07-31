@@ -171,7 +171,6 @@ def preprocess_depth_batch(depths, swap_axes=False, data_format=None):
     assert data_format in ('channels_first', 'channels_last')
 
     if swap_axes:
-        print('swapping axes')
         # Rows and columns are switched in HDF files from paper
         if data_format == 'channels_first':
             depths = np.transpose(depths, (0, 1, 3, 2))
