@@ -17,6 +17,9 @@ IMAGE_SIZE = (100, 100)
 
 logging.basicConfig(level=logging.INFO)
 
+_mask = np.zeros(IMAGE_SIZE, np.uint8)
+cv2.circle(_mask, (IMAGE_SIZE[0] // 2, IMAGE_SIZE[1] // 2), IMAGE_SIZE[0] // 2, 1, -1)
+
 
 def main():
     logger = logging.getLogger('convert_unity_data')
@@ -54,8 +57,12 @@ def main():
         # The BRDF data included in the paper has a very large magnitude, so we scale it down between 0 and 1. My
         # renderer outputs values between 0 and 255, so we have to scale them to have the same range as the data from
         # the paper
-        brdf_image = (np.rollaxis(cv2.imread(brdf_image), 2, 0) / 255) * common.brdf_divider
-        depth_image = np.rollaxis(data_utils.read_exr_depth(depth_image), 2, 0)
+        brdf_image = (cv2.imread(brdf_image) / 255) * common.brdf_divider
+        brdf_image[_mask == 0] = 0
+        brdf_image = np.rollaxis(brdf_image, 2, 0)
+        depth_image = data_utils.read_exr_depth(depth_image).copy()
+        depth_image[_mask == 0] = 0
+        depth_image = np.rollaxis(depth_image, 2, 0)
 
         assert brdf_image.shape == (3,) + IMAGE_SIZE
         assert depth_image.shape == (1,) + IMAGE_SIZE
