@@ -96,15 +96,21 @@ def normalize_image_range(image):
     return (image - min_val) / (max_val - min_val)
 
 
-def show_images(images):
+def show_images(images, titles=None):
     """
     Show a list of images using matplotlib.
 
     :param images: images to display
+    :param titles: titles of the images
     """
+    if titles is None:
+        titles = ("",) * len(images)
+    else:
+        assert len(titles) == len(images)
     fig, axes = plt.subplots(1, len(images), figsize=(3 * len(images), 3))
     fig.set_tight_layout(True)
-    for ax, img in zip(axes.ravel(), images):
+    for ax, img, title in zip(axes.ravel(), images, titles):
+        ax.set_title(title)
         ax.imshow(img)
     plt.show()
 
