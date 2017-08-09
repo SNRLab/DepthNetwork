@@ -87,6 +87,7 @@ class TestCmd(cmd.Cmd):
             if image_type.startswith('brdf_') or image_type.startswith('rgb_'):
                 cv2.imwrite(file_name, (image * 255)[..., ::-1])
             elif image_type.startswith('depth_'):
+                image *= common.depth_divider
                 header = OpenEXR.Header(*image.shape)
                 depth_channel = Imath.Channel(Imath.PixelType(Imath.PixelType.HALF))
                 header['channels'] = {'Z': depth_channel}
@@ -232,76 +233,6 @@ def main():
         sys.exit(3)
 
     TestCmd().cmdloop()
-
-    while True:
-        try:
-            i = int(input("Image Index: "))
-        except(IndexError, ValueError):
-            logger.error("Invalid index format")
-            continue
-        if i >= len(brdf_images):
-            logger.error("Index out of range")
-            continue
-
-        images = []
-        titles = []
-
-        if rgb_images is not None:
-            # Preprocess RGB ground truth image
-            rgb_batch_true_pre = depth_network.model.preprocess_rgb_batch(rgb_images[i:i + 1])
-            rgb_image_true = np.transpose(depth_network.model.postprocess_rgb_batch(rgb_batch_true_pre)[0],
-                                          (1, 2, 0)).astype(np.float32)
-            rgb_image_true = cv2.cvtColor(rgb_image_true, cv2.COLOR_BGR2RGB)
-            images.append(rgb_image_true)
-            titles.append("RGB ground truth")
-
-        # Preprocess BRDF ground truth image
-        brdf_batch_true_pre = depth_network.model.preprocess_brdf_batch(brdf_images[i:i + 1])
-        brdf_image_true = np.transpose(depth_network.model.postprocess_rgb_batch(brdf_batch_true_pre)[0],
-                                       (1, 2, 0)).astype(np.float32)
-        brdf_image_true = cv2.cvtColor(brdf_image_true, cv2.COLOR_BGR2RGB)
-        images.append(brdf_image_true)
-        titles.append("BRDF ground truth")
-
-        if depth_images is not None:
-            # Preprocess depth ground truth image
-            depth_batch_true_pre = depth_network.model.preprocess_depth_batch(depth_images[i:i + 1],
-                                                                              swap_axes=args.swap_depth_axes)
-            depth_image_true = depth_network.model.postprocess_depth_batch(depth_batch_true_pre)[0][0]
-            images.append(depth_image_true)
-            titles.append("Depth ground truth")
-
-        if render_model is not None:
-            # Predict BRDF from ground truth RGB image
-            brdf_batch_pred = render_model.predict(rgb_batch_true_pre)
-            brdf_batch_pred_post = depth_network.model.postprocess_rgb_batch(brdf_batch_pred)
-
-            brdf_image_pred = np.transpose(brdf_batch_pred_post[0], (1, 2, 0))
-            brdf_image_pred = cv2.cvtColor(brdf_image_pred, cv2.COLOR_BGR2RGB)
-            brdf_diff = np.abs(brdf_image_true - brdf_image_pred)
-            logger.info('BRDF: mse: %s, mae: %s', (brdf_diff ** 2).mean(), brdf_diff.mean())
-            images.append(brdf_image_pred)
-            titles.append("BRDF predicted")
-
-        if depth_model is not None:
-            if render_model is not None:
-                # Predict depth from predicted BRDF
-                depth_batch_pred_post = depth_network.model.postprocess_depth_batch(
-                    depth_model.predict(brdf_batch_pred))
-                depth_image_pred = depth_batch_pred_post[0][0]
-                images.append(depth_image_pred)
-                titles.append("Depth predicted from render network")
-
-            # Predict depth from ground truth BRDF
-            depth_batch_pred2_post = depth_network.model.postprocess_depth_batch(
-                depth_model.predict(brdf_batch_true_pre))
-            depth_image_pred2 = depth_batch_pred2_post[0][0]
-            images.append(depth_image_pred2)
-            titles.append("Depth predicted from ground truth")
-
-        common.show_images(images, titles)
-        plt.show()
-
 
 if __name__ == "__main__":
     main()
