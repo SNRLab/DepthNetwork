@@ -28,8 +28,6 @@ def depth_map_to_point_cloud(depth, focal_length, principal_point=None):
     z = depth[u, vflipped]
     center_x = z * (height / 2 - px_d) / fx_d
     center_y = z * (width / 2 - py_d) / fy_d
-    print(center_x)
-    print(center_y)
 
     for u in range(height):
         for v in range(width):
@@ -52,7 +50,6 @@ def depth_map_to_point_cloud(depth, focal_length, principal_point=None):
             pcloud[u * vflipped][0] = pcloudX
             pcloud[u * vflipped][1] = pcloudY
             pcloud[u * vflipped][2] = z
-            print((pcloudX, pcloudY, z))
 
     # Load original image to color point cloud points
     # correctedImage = cv2.imread(correctedFilename)
