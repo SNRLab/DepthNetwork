@@ -153,12 +153,13 @@ def evaluate_batch(start=0, end=None):
         depth_metrics = metrics['depth'] = {}
 
         depth_true = batches['depth_true']
-        depth_pred = batches['depth_pred']
         depth_pred_from_true = batches['depth_pred_from_true']
 
-        depth_diff = np.abs(depth_true - depth_pred)
-        depth_metrics['mse'] = (depth_diff ** 2).mean()
-        depth_metrics['mae'] = depth_diff.mean()
+        if render_model is not None:
+            depth_pred = batches['depth_pred']
+            depth_diff = np.abs(depth_true - depth_pred)
+            depth_metrics['mse'] = (depth_diff ** 2).mean()
+            depth_metrics['mae'] = depth_diff.mean()
 
         depth_diff_from_true = np.abs(depth_true - depth_pred_from_true)
         depth_metrics['mse_true'] = (depth_diff_from_true ** 2).mean()
