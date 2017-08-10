@@ -98,7 +98,7 @@ def normalize_image_range(image):
 
 def show_images(images, titles=None):
     """
-    Show a list of images using matplotlib.
+    Show a list of images using matplotlib. Color images are assumed to be BGR.
 
     :param images: images to display
     :param titles: titles of the images
@@ -111,6 +111,8 @@ def show_images(images, titles=None):
     fig.set_tight_layout(True)
     for ax, img, title in zip(axes.ravel(), images, titles):
         ax.set_title(title)
+        if img.shape[-1] == 3:
+            img = img[..., ::-1]
         ax.imshow(img)
     plt.show()
 

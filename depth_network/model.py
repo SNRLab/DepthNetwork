@@ -213,6 +213,8 @@ def postprocess_rgb_batch(images, data_format=None):
     assert data_format in ('channels_first', 'channels_last')
 
     images = np.clip(images, 0, 1)
+    images *= 255
+    images = images.astype(np.uint8)
     if data_format == 'channels_first':
         return images[:, :3, 7:57, 7:57]
     else:
@@ -230,6 +232,8 @@ def postprocess_depth_batch(depths, data_format=None):
     if data_format is None:
         data_format = K.image_data_format()
     assert data_format in ('channels_first', 'channels_last')
+
+    depths *= depth_divider
 
     if data_format == 'channels_first':
         return depths[:, :1, 7:57, 7:57]

@@ -30,12 +30,14 @@ class TestCmd(cmd.Cmd):
         super().__init__()
         self.prompt = "> "
 
-    def _parse_index(self, args):
+    @staticmethod
+    def _parse_index(args):
         if len(args) > 1:
             print("*** Too many parameters")
             return None
         elif len(args) == 0:
             index = random.randint(0, len(brdf_images) - 1)
+            print("Randomly chose image: {}".format(index))
         else:
             try:
                 index = int(args[0])
@@ -56,7 +58,7 @@ class TestCmd(cmd.Cmd):
         """
         args = [a.strip() for a in args.split(' ') if a]
 
-        index = self._parse_index(args)
+        index = TestCmd._parse_index(args)
         if index is not None:
             images = process_sample(index)
             common.show_images(images.values())
@@ -77,7 +79,7 @@ class TestCmd(cmd.Cmd):
         image_type = args[0]
         file_name = args[1]
 
-        index = self._parse_index(args[2:])
+        index = TestCmd._parse_index(args[2:])
         if index is not None:
             images = process_sample(index)
             if image_type not in images:
@@ -87,13 +89,38 @@ class TestCmd(cmd.Cmd):
             if image_type.startswith('brdf_') or image_type.startswith('rgb_'):
                 cv2.imwrite(file_name, (image * 255)[..., ::-1])
             elif image_type.startswith('depth_'):
-                image *= common.depth_divider
                 header = OpenEXR.Header(*image.shape)
                 depth_channel = Imath.Channel(Imath.PixelType(Imath.PixelType.HALF))
                 header['channels'] = {'Z': depth_channel}
                 file = OpenEXR.OutputFile(file_name, header)
                 file.writePixels({'Z': image.astype(np.float16).tostring()})
                 file.close()
+
+    def do_evaluate(self, args):
+        """
+        evaluate [START [END]]
+
+        Print metrics for the specified range.
+        :param args:
+        :return:
+        """
+        args = [a.strip() for a in args.split(' ') if a]
+
+        if len(args) < 2:
+            end = brdf_images.shape[0]
+        else:
+            end = TestCmd._parse_index(args[1:])
+            if end is None:
+                return
+
+        if len(args) == 0:
+            start = 0
+        else:
+            start = TestCmd._parse_index(args[0:1])
+            if start is None:
+                return
+
+        print(evaluate_batch(start, end))
 
     def do_quit(self, args):
         """
@@ -102,66 +129,94 @@ class TestCmd(cmd.Cmd):
         raise SystemExit()
 
 
-def process_sample(i):
+def evaluate_batch(start=0, end=None):
+    if end is None:
+        end = brdf_images.shape[0]
+
+    batches = process_batch(start, end)
+
+    metrics = {}
+
+    brdf_true = batches['brdf_true']
+
+    if render_model is not None:
+        render_metrics = metrics['render'] = {}
+
+        rgb_true = batches['rgb_true']
+        brdf_pred = batches['brdf_pred']
+
+        brdf_diff = np.abs(brdf_true - brdf_pred)
+        render_metrics['mse'] = (brdf_diff ** 2).mean()
+        render_metrics['mae'] = brdf_diff.mean()
+
+    if depth_model is not None:
+        depth_metrics = metrics['depth'] = {}
+
+        depth_true = batches['depth_true']
+        depth_pred = batches['depth_pred']
+        depth_pred_from_true = batches['depth_pred_from_true']
+
+        depth_diff = np.abs(depth_true - depth_pred)
+        depth_metrics['mse'] = (depth_diff ** 2).mean()
+        depth_metrics['mae'] = depth_diff.mean()
+
+        depth_diff_from_true = np.abs(depth_true - depth_pred_from_true)
+        depth_metrics['mse_true'] = (depth_diff_from_true ** 2).mean()
+        depth_metrics['mae_true'] = depth_diff_from_true.mean()
+
+    return metrics
+
+
+def process_batch(start, end):
     import depth_network.model
 
-    images = {}
-    titles = []
+    batches = {}
 
     if rgb_images is not None:
         # Preprocess RGB ground truth image
-        rgb_batch_true_pre = depth_network.model.preprocess_rgb_batch(rgb_images[i:i + 1])
-        rgb_image_true = np.transpose(depth_network.model.postprocess_rgb_batch(rgb_batch_true_pre)[0],
-                                      (1, 2, 0)).astype(np.float32)
-        rgb_image_true = cv2.cvtColor(rgb_image_true, cv2.COLOR_BGR2RGB)
-        images['rgb_true'] = rgb_image_true
-        titles.append("RGB ground truth")
+        rgb_batch_true_pre = depth_network.model.preprocess_rgb_batch(rgb_images[start:end])
+        rgb_batch_true = np.transpose(depth_network.model.postprocess_rgb_batch(rgb_batch_true_pre), (0, 2, 3, 1))
+        batches['rgb_true'] = rgb_batch_true
 
     # Preprocess BRDF ground truth image
-    brdf_batch_true_pre = depth_network.model.preprocess_brdf_batch(brdf_images[i:i + 1])
-    brdf_image_true = np.transpose(depth_network.model.postprocess_rgb_batch(brdf_batch_true_pre)[0],
-                                   (1, 2, 0)).astype(np.float32)
-    brdf_image_true = cv2.cvtColor(brdf_image_true, cv2.COLOR_BGR2RGB)
-    images['brdf_true'] = brdf_image_true
-    titles.append("BRDF ground truth")
+    brdf_batch_true_pre = depth_network.model.preprocess_brdf_batch(brdf_images[start:end])
+    brdf_batch_true = np.transpose(depth_network.model.postprocess_rgb_batch(brdf_batch_true_pre), (0, 2, 3, 1))
+    batches['brdf_true'] = brdf_batch_true
 
     if depth_images is not None:
         # Preprocess depth ground truth image
-        depth_batch_true_pre = depth_network.model.preprocess_depth_batch(depth_images[i:i + 1],
+        depth_batch_true_pre = depth_network.model.preprocess_depth_batch(depth_images[start:end],
                                                                           swap_axes=swap_depth_axes)
-        depth_image_true = depth_network.model.postprocess_depth_batch(depth_batch_true_pre)[0][0]
-        images['depth_true'] = depth_image_true
-        titles.append("Depth ground truth")
+        depth_batch_true = depth_network.model.postprocess_depth_batch(depth_batch_true_pre)
+        batches['depth_true'] = depth_batch_true
 
     if render_model is not None:
         # Predict BRDF from ground truth RGB image
-        brdf_batch_pred = render_model.predict(rgb_batch_true_pre)
+        brdf_batch_pred = render_model.predict(rgb_batch_true_pre, batch_size=128)
         brdf_batch_pred_post = depth_network.model.postprocess_rgb_batch(brdf_batch_pred)
 
-        brdf_image_pred = np.transpose(brdf_batch_pred_post[0], (1, 2, 0))
-        brdf_image_pred = cv2.cvtColor(brdf_image_pred, cv2.COLOR_BGR2RGB)
-        brdf_diff = np.abs(brdf_image_true - brdf_image_pred)
-        logger.info('BRDF: mse: %s, mae: %s', (brdf_diff ** 2).mean(), brdf_diff.mean())
-        images['brdf_pred'] = brdf_image_pred
-        titles.append("BRDF predicted")
+        brdf_batch_pred_post = np.transpose(brdf_batch_pred_post, (0, 2, 3, 1))
+        batches['brdf_pred'] = brdf_batch_pred_post
 
     if depth_model is not None:
         if render_model is not None:
             # Predict depth from predicted BRDF
             depth_batch_pred_post = depth_network.model.postprocess_depth_batch(
-                depth_model.predict(brdf_batch_pred))
-            depth_image_pred = depth_batch_pred_post[0][0]
-            images['depth_pred'] = depth_image_pred
-            titles.append("Depth predicted from render network")
+                depth_model.predict(brdf_batch_pred, batch_size=128))
+            batches['depth_pred'] = depth_batch_pred_post
 
         # Predict depth from ground truth BRDF
-        depth_batch_pred2_post = depth_network.model.postprocess_depth_batch(
-            depth_model.predict(brdf_batch_true_pre))
-        depth_image_pred2 = depth_batch_pred2_post[0][0]
-        images['depth_pred_from_true'] = depth_image_pred2
-        titles.append("Depth predicted from ground truth")
+        depth_batch_pred2_post = depth_network.model.postprocess_depth_batch(depth_model.predict(brdf_batch_true_pre))
+        batches['depth_pred_from_true'] = depth_batch_pred2_post
 
-    return images
+    return batches
+
+
+def process_sample(i):
+    batches = process_batch(i, i + 1)
+
+    # Remove batch axis and depth channel axis
+    return {n: np.squeeze(b) for n, b in batches.items()}
 
 
 def main():
@@ -233,6 +288,7 @@ def main():
         sys.exit(3)
 
     TestCmd().cmdloop()
+
 
 if __name__ == "__main__":
     main()
