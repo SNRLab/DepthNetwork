@@ -120,6 +120,10 @@ class TestCmd(cmd.Cmd):
             if start is None:
                 return
 
+        if end <= start:
+            print("*** START must be smaller than END")
+            return
+
         print(evaluate_batch(start, end))
 
     def do_quit(self, args):
