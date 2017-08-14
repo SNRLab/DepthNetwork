@@ -61,7 +61,8 @@ class TestCmd(cmd.Cmd):
         index = TestCmd._parse_index(args)
         if index is not None:
             images = process_sample(index)
-            common.show_images(images.values())
+            image_order = ('rgb_true', 'brdf_true', 'depth_true', 'brdf_pred', 'depth_pred', 'depth_pred_from_true')
+            common.show_images([images[n] for n in image_order if images.get(n, None) is not None])
             plt.show()
 
     def do_save(self, args):
