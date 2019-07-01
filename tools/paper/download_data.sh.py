@@ -1,0 +1,116 @@
+import os
+import urllib.request
+
+urls = ['https://www.dropbox.com/sh/hsn4h4bobss9dnb/AACuX7w3T3nwVLBs5WvrWLfca/Simple%20phantom/Data/0_brdf_small.hdf5?dl=1',
+      'https://www.dropbox.com/sh/hsn4h4bobss9dnb/AAAy32SjMkv08WE0R55p_0SFa/Simple%20phantom/Data/0_rgb_small.hdf5?dl=1',
+      'https://www.dropbox.com/sh/hsn4h4bobss9dnb/AABEkl-B706zs-Lt3oBif26Za/Simple%20phantom/Data/0_z_small.hdf5?dl=1',
+      'https://www.dropbox.com/sh/hsn4h4bobss9dnb/AACaMYWPnjh6YeCK_2dgbqwza/Simple%20phantom/Data/2_brdf_small.hdf5?dl=1',
+      'https://www.dropbox.com/sh/hsn4h4bobss9dnb/AAC8I1QYt10auLxfalJ0ltYWa/Simple%20phantom/Data/2_rgb_small.hdf5?dl=1',
+      'https://www.dropbox.com/sh/hsn4h4bobss9dnb/AAAU8VKcGqdHAXYqm0HlhBLEa/Simple%20phantom/Data/2_z_small.hdf5?dl=1',
+      'https://www.dropbox.com/sh/hsn4h4bobss9dnb/AABUMcEpWnXM0JlY78E75Bywa/Simple%20phantom/Data/3_brdf_small.hdf5?dl=1',
+      'https://www.dropbox.com/sh/hsn4h4bobss9dnb/AABADNlBgUbEsoPFpFkKYmfZa/Simple%20phantom/Data/3_rgb_small.hdf5?dl=1',
+      'https://www.dropbox.com/sh/hsn4h4bobss9dnb/AACgPlwetQEd5pGF9pu6bfhPa/Simple%20phantom/Data/3_z_small.hdf5?dl=1',
+      'https://www.dropbox.com/sh/hsn4h4bobss9dnb/AAACcKz_au17ODHzH89NdQrSa/Simple%20phantom/Data/4_brdf_small.hdf5?dl=1',
+      'https://www.dropbox.com/sh/hsn4h4bobss9dnb/AABi-1x5XDbLPR0CdeyBdEcIa/Simple%20phantom/Data/4_rgb_small.hdf5?dl=1',
+      'https://www.dropbox.com/sh/hsn4h4bobss9dnb/AABTwAkM3OMAMiBYw-TdrwqPa/Simple%20phantom/Data/4_z_small.hdf5?dl=1',
+      'https://www.dropbox.com/sh/hsn4h4bobss9dnb/AACyZTf5UywBu-Jj212A5Wy5a/Simple%20phantom/Data/5_brdf_small.hdf5?dl=1',
+      'https://www.dropbox.com/sh/hsn4h4bobss9dnb/AAAXh3m0mUPdfjoNfSenrStga/Simple%20phantom/Data/5_rgb_small.hdf5?dl=1',
+      'https://www.dropbox.com/sh/hsn4h4bobss9dnb/AACpcOuBKVy1d4ljcJECHur2a/Simple%20phantom/Data/5_z_small.hdf5?dl=1',
+      'https://www.dropbox.com/sh/hsn4h4bobss9dnb/AACt320rYBaIapRfTzQojOKYa/Simple%20phantom/Data/6_brdf_small.hdf5?dl=1',
+      'https://www.dropbox.com/sh/hsn4h4bobss9dnb/AAA5yC2weU3h0fxKOqHY7_rGa/Simple%20phantom/Data/6_rgb_small.hdf5?dl=1',
+      'https://www.dropbox.com/sh/hsn4h4bobss9dnb/AAAR6Jdwif37Z1JH3CaaCW01a/Simple%20phantom/Data/6_z_small.hdf5?dl=1',
+      'https://www.dropbox.com/sh/hsn4h4bobss9dnb/AAAnuNjpDjP37Ap-biUfTHAAa/Simple%20phantom/Data/7_brdf_small.hdf5?dl=1',
+      'https://www.dropbox.com/sh/hsn4h4bobss9dnb/AAD2VQnq1qhk2ZvGJ8AHlJ5wa/Simple%20phantom/Data/7_rgb_small.hdf5?dl=1',
+      'https://www.dropbox.com/sh/hsn4h4bobss9dnb/AABm0GIKFik66hd5B1lHsOmqa/Simple%20phantom/Data/7_z_small.hdf5?dl=1',
+      'https://www.dropbox.com/sh/hsn4h4bobss9dnb/AAAPZR4DjgHHfCVhJlhQ9vcXa/Simple%20phantom/Data/8_brdf_small.hdf5?dl=1',
+      'https://www.dropbox.com/sh/hsn4h4bobss9dnb/AAAZmLKbEces2C2YKBQpwwbYa/Simple%20phantom/Data/8_rgb_small.hdf5?dl=1',
+      'https://www.dropbox.com/sh/hsn4h4bobss9dnb/AAB6XZVZ7yYHCQGkqXf2va7Va/Simple%20phantom/Data/8_z_small.hdf5?dl=1',
+      'https://www.dropbox.com/sh/hsn4h4bobss9dnb/AAAoC29djVtRC_9PfMNAxzAya/Simple%20phantom/Data/9_brdf_small.hdf5?dl=1',
+      'https://www.dropbox.com/sh/hsn4h4bobss9dnb/AACkU4i2e0cpMCqELMGHAACoa/Simple%20phantom/Data/9_rgb_small.hdf5?dl=1',
+      'https://www.dropbox.com/sh/hsn4h4bobss9dnb/AACO1T2wtspxOd885G6sxXL5a/Simple%20phantom/Data/9_z_small.hdf5?dl=1',
+      'https://www.dropbox.com/sh/hsn4h4bobss9dnb/AAD_9w4wqwRMkXJ-Xq3wUZFka/Simple%20phantom/Data/10_brdf_small.hdf5?dl=1',
+      'https://www.dropbox.com/sh/hsn4h4bobss9dnb/AAA552Gdhh90qi3pY4NsxvRwa/Simple%20phantom/Data/10_rgb_small.hdf5?dl=1',
+      'https://www.dropbox.com/sh/hsn4h4bobss9dnb/AAAkNyit6ClXJHIZRQABJlj5a/Simple%20phantom/Data/10_z_small.hdf5?dl=1',
+      'https://www.dropbox.com/sh/hsn4h4bobss9dnb/AACAs4vjbi6MXncpLyT50yxCa/Simple%20phantom/Data/11_brdf_small.hdf5?dl=1',
+      'https://www.dropbox.com/sh/hsn4h4bobss9dnb/AABfuYGyon1ewQElLRH9nTsDa/Simple%20phantom/Data/11_rgb_small.hdf5?dl=1',
+      'https://www.dropbox.com/sh/hsn4h4bobss9dnb/AAAmHTppaY3gZF97P2ogyyuia/Simple%20phantom/Data/11_z_small.hdf5?dl=1',
+      'https://www.dropbox.com/sh/hsn4h4bobss9dnb/AABuXmFm4tJykLfTNKfJ0LnCa/Simple%20phantom/Data/12_brdf_small.hdf5?dl=1',
+      'https://www.dropbox.com/sh/hsn4h4bobss9dnb/AADY41CMDu1_EBLQeZ5QXee0a/Simple%20phantom/Data/12_rgb_small.hdf5?dl=1',
+      'https://www.dropbox.com/sh/hsn4h4bobss9dnb/AAB4hASJ70FSdtJhE5dY6YKfa/Simple%20phantom/Data/12_z_small.hdf5?dl=1',
+      'https://www.dropbox.com/sh/hsn4h4bobss9dnb/AABGPP74lWBdZMidKQfIsPNca/Simple%20phantom/Data/13_brdf_small.hdf5?dl=1',
+      'https://www.dropbox.com/sh/hsn4h4bobss9dnb/AADk6J7z3_3lqTYeOtqybp_ba/Simple%20phantom/Data/13_rgb_small.hdf5?dl=1',
+      'https://www.dropbox.com/sh/hsn4h4bobss9dnb/AADjtkkwRaegYczWWFxp1zhYa/Simple%20phantom/Data/13_z_small.hdf5?dl=1',
+      'https://www.dropbox.com/sh/hsn4h4bobss9dnb/AAB48Mh3X9nO9V_Qd1r5PPmfa/Simple%20phantom/Data/14_brdf_small.hdf5?dl=1',
+      'https://www.dropbox.com/sh/hsn4h4bobss9dnb/AABgqHgwJISZcMiNlzPEiNGoa/Simple%20phantom/Data/14_rgb_small.hdf5?dl=1',
+      'https://www.dropbox.com/sh/hsn4h4bobss9dnb/AACLXUbewLFE8-iowlygxsufa/Simple%20phantom/Data/14_z_small.hdf5?dl=1',
+      'https://www.dropbox.com/sh/hsn4h4bobss9dnb/AAB7wPSxIBrTsWJsGanalEjqa/Simple%20phantom/Data/15_brdf_small.hdf5?dl=1',
+      'https://www.dropbox.com/sh/hsn4h4bobss9dnb/AADmghDKDb8QYanlr9SFGA0pa/Simple%20phantom/Data/15_rgb_small.hdf5?dl=1',
+      'https://www.dropbox.com/sh/hsn4h4bobss9dnb/AABg2I2d9AFsOW62R20pxFM1a/Simple%20phantom/Data/15_z_small.hdf5?dl=1',
+      'https://www.dropbox.com/sh/hsn4h4bobss9dnb/AABgBu8kUleTXbe_qnAF3TRra/Simple%20phantom/Data/16_brdf_small.hdf5?dl=1',
+      'https://www.dropbox.com/sh/hsn4h4bobss9dnb/AAD5fVDNuGgEzVwtduH3cV6wa/Simple%20phantom/Data/16_rgb_small.hdf5?dl=1',
+      'https://www.dropbox.com/sh/hsn4h4bobss9dnb/AAA00mZTIPetgcjyftenAT2fa/Simple%20phantom/Data/16_z_small.hdf5?dl=1']
+
+
+sha256sums=['8b31ac0d798daba76348382e4c4e591853a99fd87e04e762c524aa29eb4c8a85',
+            'b5c446663000bf330ea19613ca98fd426dc9d11ca7df67a95fd4aeeb25b09073',
+            'b600f486d403e96ccdb823cb1b655213428c8a3231f6909748c6094a4afd4fab',
+            'f78260b3e8151a64112dad5f94aeb99ad25c226efa9ad368bf44cccba73d30c7',
+            'cbee261ef5ac511e9a001793a54a350d4c80da1f196e01d4219b4ebd0fe3d6a2',
+            'f629b08a3e20ee1cd6792030fe3df0658d44c227bf04374627fde3d22a37300e',
+            '37e55c73d6d0f9ec2fc1c76475878436a4c7df43a81a6883ede22d38a2ea60cb',
+            '7d2d529a4ae1f8b50518a1480de5d4052becca4ac37bb06aa07a04eb7ee2b05f',
+            '14943371253a5145991f2811618e4218bee97ec04f1eeafa65c332a76675d21c',
+            '8f4cbb3a6278683a6102e36376c562a736e931d13a3d7a5de83cb9c97434f452',
+            'd32177657aa5a07673d424c3c55411f8af35dbd91e103d756e8cd45c25bc1340',
+            'f75c04a7a988be10e56cff54f802e5d8c3507f584871ac1602ba73e00ab807b1',
+            'bbc1025560f73336dbacbd9d0ed192e89f5ed25deb7b4bf2ef67e71fcd5ca86a',
+            '22f2b86a114a8bdb2c3902b165382a7ceebfe634cee8df1d5c532ccc38df861c',
+            '6218f705964f8a738b1a7c44395c84c2dc353d6fe882070b97b94f75ef4ff679',
+            '689935a41272d7cf6b20b2d94f9d79805a227b2e73dca961f1db920a3a078e61',
+            '92b3d5728e6f3c54b40297c536fbb9f69272f0eb6e545b33b2f137e396a007b2',
+            'ad67e577d303ac8f870604f3ee041471d4ac062ca1184da150957621bc5e0396',
+            '97dbd4d7b3a47b9c1b474db947d282f87f006241ed2bb2c7b25e69849772e937',
+            '1dc9ffe6a63180a2981b7501a443cf24d6e06478a067270ff7be85697fb1277b',
+            '6b33fe757a5854ad070934eda3f03cee556c3dfdc6feb57d64dffabade3dc859',
+            'fa60741f4aea63c59cad82070bb17b4f1bc4c48f139dbca12ba7ed95b9365d8d',
+            'e159ac1d29d62f3ef6b50e6af356234db23af8b04a3fdd7210b12fd5560a3470',
+            '63bbf72ffe2489998a3e4db0c017be77b6d498d5dca27a93900a2f34047f390d',
+            '8f19725a201bfeb76c337e3dd8a88c4625dda9d47cdb98685bb679710b02073e',
+            'b8affb78f45ff63d993b1b908ade9f22142ce95627e647a0ec9cf49f14bba23a',
+            '1ffcf999203b732b99467e53039e2115f1c9f403aa3b6abff197b4d1b27e6f35',
+            'dd609c892702c72da41e95dca4815592093dd61ed839309da04122b63a6665d0',
+            '78b9e43b0b40c38f7d7f0f06a8f8ab8644d19197c650268e220f6d8864eacfbf',
+            '9bb8db2685db3c0e5823d5f5fff0639025b00dfc5b6d423feb51d2e5bf4b985a',
+            'a5339082997482bc9bf58fcd209b27bad9114028b0c68f8cf5f0ad42af69affe',
+            '7eaeff0787170edab4fb757ee1f5530765c5fc9b53a809dc1977e8bc422f94b5',
+            '34ecda25dbe5537956731a5f987c1fba189f49a41edbf4777dde4a6b73d551c2',
+            'bb1667c84a7b017a2379e290093a8145fd3a605e303312a47ae463dd91f8325c',
+            '22bb7ee68c35d4034751a75c01dcaaf2102733a874634918ecf380eed5df5600',
+            '8840a366deffe51da8cd20a105fe8c1d1cb0d5e990891c99017a6823ba85a858',
+            '745743a58a6ea3bf242a65189c0bb865bf9a20ba5850c54b801dab3c7ef3f3f8',
+            '9c9260b033c959925d07bb9a3b852655ac66dbd40d0163530c204462c2a01fd5',
+            '0fbf6a9eab575ae6a63402be72e1feaa65fab536fc1e0d4d8beab6337918a449',
+            'ff9dbed694a3d8fe13d5df284b1c8dff75a8ea6e4b1c08ffec8fc87bce807900',
+            '5ddfaf693bde1977dabc61162c3d64d561863c5975d78aeed9827c5f3b6437cd',
+            '306d602ea707f488135f11c6728a654666173c994e12c7f0e1f53596968be0b0',
+            '0d1ebafa215848eddd21bb20ce8d2a5bbbb6c5761010accd609378d96b57a0da',
+            '348c2388e1d1e974b4c9c6d6254b45b4fc9e04e2f6010cfacb4bd8156cd2152f',
+            '2befe5e8fca0d31221e90328cf2080843a93c06ed8cb16a431aad43aced4a9a6',
+            '2dbad86eb75fb8ab871dba2a1eb9ef0b41307a94891df2ff3b614d834f2a7c1b',
+            '07af42b0dea8f93b1ce01299a540824d239eca6a1e82afffea62e71c5712a385',
+            '3f591c92825d79ae8ae3c3e2bc543bf756a9578c693daa65a44ea5c667887ba7']
+
+if not os.path.exists("../../data"):
+  os.mkdir("../../data")
+if not os.path.exists("../../data/paper"):  
+  os.mkdir("../../data/paper")
+for i in range(0,len(urls)):
+  url = urls[i]
+  sha256sum = sha256sums[i]
+  file = os.path.basename(urls[i]).split("?")[0]
+  path = "../../data/paper/" + file
+  filedata = urllib.request.urlopen(url)
+  datatowrite = filedata.read()
+  with open(path, 'wb') as f:  
+    f.write(datatowrite)
+  

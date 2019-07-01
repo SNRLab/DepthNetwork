@@ -6,18 +6,16 @@ import argparse
 import Imath
 
 
-def depth_map_to_point_cloud(depth, focal_length, principal_point=None):
+def depth_map_to_point_cloud(depth, fx_d, fy_d, px_d, py_d):
     height, width = depth.shape[:2]
+    print(height)
+    print(width)
 
-    if type(focal_length) is int:
-        focal_length = (focal_length, focal_length)
 
-    fx_d, fy_d = focal_length
+    #if principal_point is None:
+        #principal_point = (width / 2, height / 2)
 
-    if principal_point is None:
-        principal_point = (width / 2, height / 2)
-
-    px_d, py_d = principal_point
+    #px_d, py_d = principal_point
 
     # Create point cloud
     pcloud = np.zeros((height * width, 3))
@@ -75,6 +73,26 @@ def write_ply(file, point_cloud):
         lines.append(str(p[2]) + ' ')
 
     file.writelines(lines)
+    
+def into_ply(filename, point_cloud):
+    vertices = point_cloud.shape[0]
+    file = open(filename, "w")
+
+    lines = ['ply\n',
+             'format ascii 1.0\n',
+             'element vertex {} \n'.format(vertices),
+             'property float x\n',
+             'property float y\n',
+             'property float z\n',
+             'end_header\n']
+
+    # Body
+    for p in point_cloud:
+        lines.append(str(p[0]) + ' ')
+        lines.append(str(p[1]) + ' ')
+        lines.append(str(p[2]) + ' ')
+
+    file.writelines(lines)
 
 
 def main():
@@ -91,7 +109,7 @@ def main():
     depth = np.fromstring(depth, dtype=np.float16)
     depth.shape = size[::-1]
 
-    point_cloud = depth_map_to_point_cloud(depth, 100)
+    point_cloud = depth_map_to_point_cloud(depth, 50)
     write_ply(args.output_file, point_cloud)
 
 

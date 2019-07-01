@@ -18,6 +18,9 @@ import depth_network.common as common
 import random
 import OpenEXR
 import Imath
+import skimage.transform
+import create_point_cloud
+import Reconstruction
 
 logging.basicConfig(level=logging.INFO)
 
@@ -87,16 +90,25 @@ class TestCmd(cmd.Cmd):
                 print("*** Invalid image type: {}".format(image_type))
                 return
             image = images[image_type]
+            
+            image = skimage.transform.resize(image, (400, 400), preserve_range=True, mode='constant')
+            
+                        
             if image_type.startswith('brdf_') or image_type.startswith('rgb_'):
-                cv2.imwrite(file_name, (image * 255)[..., ::-1])
+                
+                #cv2.imwrite(file_name, (image * 255)[..., ::-1])
+                cv2.imwrite(file_name, image)
             elif image_type.startswith('depth_'):
-                header = OpenEXR.Header(*image.shape)
-                depth_channel = Imath.Channel(Imath.PixelType(Imath.PixelType.HALF))
-                header['channels'] = {'Z': depth_channel}
-                file = OpenEXR.OutputFile(file_name, header)
-                file.writePixels({'Z': image.astype(np.float16).tostring()})
-                file.close()
-
+                #depth_map_to_point_cloud
+                #overlaying rgb image onto pointcloud
+                image_rgb = images["rgb_true"]
+                image_rgb = skimage.transform.resize(image_rgb, (400, 400), preserve_range=True, mode='constant')
+                cv2.imwrite(file_name[:-4]+".png", image_rgb)
+                
+                #saving depthmap and converting to pointcloud
+                np.savetxt(file_name, image.astype(np.float16), delimiter=",", fmt='%1.4f')
+                d = Reconstruction.DepthMapToPointCloud() 
+                d.Run(file_name,file_name[:-4]+".png")
     def do_evaluate(self, args):
         """
         evaluate [START [END]]
@@ -126,6 +138,63 @@ class TestCmd(cmd.Cmd):
             return
 
         print(evaluate_batch(start, end))
+        
+    def do_evaluate_cloud_pred(self, args):
+        """
+        evaluate_depth TYPE [INDEX]
+        """
+        args = [a.strip() for a in args.split(' ') if a]
+        
+        if len(args) < 1:
+            print("*** Too few arguments")
+            return
+
+        depth_type = args[0]
+
+        index = TestCmd._parse_index(args[1:])
+        
+        if index is not None:
+            images = process_sample(index)
+            if depth_type not in images:
+                print("*** Invalid image type: {}".format(depth_type))
+                return
+            depth_type = images[depth_type]
+            depth_true = images["depth_true"]
+            
+            depth_type = skimage.transform.resize(depth_type, (400, 400), preserve_range=True, mode='constant')
+            depth_true = skimage.transform.resize(depth_true, (400, 400), preserve_range=True, mode='constant')
+            
+            depth_type = depth_type.astype(np.float16)
+            depth_true = depth_true.astype(np.float16)
+            
+            height = len(depth_type);
+            width = len(depth_type[0]);
+            minimumDepth = np.amin(depth_type);
+            maximumDepth = np.amax(depth_type);
+            minThresholdDepth = ((maximumDepth - minimumDepth)/8) + minimumDepth;
+            maxThresholdDepth = maximumDepth - ((maximumDepth - minimumDepth)/5)
+
+            depth_metrics = {}
+            depth_diff_from_true = {}
+
+            for u in range(height):
+                for v in range(width):
+                    if depth_type[u][v] >= minThresholdDepth and depth_type[u][v] <= maxThresholdDepth:
+                        depth_type[u][v] = depth_type[u][v]
+                    else:
+                        depth_type[u][v] = -100
+                    if depth_true[u][v] >= minThresholdDepth and depth_true[u][v] <= maxThresholdDepth:
+                        depth_true[u][v] = depth_true[u][v]
+                    else:
+                        depth_true[u][v] = -100
+                    if depth_type[u][v] != -100 and depth_true[u][v] != -100:
+                        depth_diff_from_true = np.abs(depth_true - depth_type)
+                    
+
+            depth_metrics['mse_true'] = (depth_diff_from_true ** 2).mean()
+            depth_metrics['mae_true'] = depth_diff_from_true.mean()
+                
+        print(depth_metrics)            
 
     def do_quit(self, args):
         """
