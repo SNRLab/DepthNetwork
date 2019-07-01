@@ -35,8 +35,10 @@ def DepthNetwork(input_shape=None, output_channels=1, data_format=None, name='de
     if input_shape is None:
         if data_format == 'channels_first':
             input_shape = (3, 64, 64)
+            #input_shape = (3, 256, 256)
         else:
             input_shape = (64, 64, 3)
+            #input_shape = (256, 256, 3)
 
     inputs = Input(input_shape)
     x = _alpha(inputs, 16, "alpha1", data_format=data_format)
@@ -126,10 +128,13 @@ def preprocess_batch(images, data_format=None):
 
     for i, image in enumerate(images):
         new_image = skimage.transform.resize(image, (50, 50), preserve_range=True, mode='constant')
+        #new_image = skimage.transform.resize(image, (100, 100), preserve_range=True, mode='constant')
         left_padding = round((image_size[1] - new_image.shape[1]) / 2)
         right_padding = 64 - new_image.shape[1] - left_padding
+        #right_padding = 256 - new_image.shape[1] - left_padding
         top_padding = round((image_size[0] - new_image.shape[0]) / 2)
         bottom_padding = 64 - new_image.shape[0] - top_padding
+        #bottom_padding = 256 - new_image.shape[0] - top_padding
         padding = ((top_padding, bottom_padding), (left_padding, right_padding), (0, 0))
         new_image = np.pad(new_image, padding, mode='reflect')
         new_images[i] = new_image

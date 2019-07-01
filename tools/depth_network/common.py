@@ -112,6 +112,8 @@ def show_images(images, titles=None):
     for ax, img, title in zip(axes.ravel(), images, titles):
         ax.set_title(title)
         print(img.shape[:2])
+        #import skimage
+        #img = skimage.transform.resize(img, (200, 200), preserve_range=True, mode='constant')
         if img.shape[-1] == 3:
             img = img[..., ::-1]
         ax.imshow(img)
